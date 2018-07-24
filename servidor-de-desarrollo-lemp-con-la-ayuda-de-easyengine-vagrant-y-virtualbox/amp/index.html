@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html ⚡>
+<head>
+    <meta charset="utf-8">
+
+    <title>Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox</title>
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+
+    <link rel="shortcut icon" href="../../favicon.png">
+
+    <link rel="shortcut icon" href="../../favicon.png" type="image/png" />
+    <link rel="canonical" href="../index.html" />
+    <meta name="referrer" content="no-referrer-when-downgrade" />
+    
+    <meta property="og:site_name" content="expertTyCE" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox" />
+    <meta property="og:description" content="Para el desarrollo web con PHP, existen diferentes opciones para comenzar a aprender o desarrollar aplicaciones profesionales con este lenguaje. Para ello existen varias alternativas llamados AMP (Apache, MySQL/MariaDB, Perl/PHP/Python), se clasifican en LAMPs (para Linux), WAMPs (para Windows), MAMPs (para macOS). Esta es la lista de" />
+    <meta property="og:url" content="http://localhost:2368/servidor-de-desarrollo-lemp-con-la-ayuda-de-easyengine-vagrant-y-virtualbox/" />
+    <meta property="og:image" content="http://localhost:2368/content/images/2018/01/---2-.png" />
+    <meta property="article:published_time" content="2018-01-06T18:20:31.000Z" />
+    <meta property="article:modified_time" content="2018-01-08T00:13:54.000Z" />
+    <meta property="article:tag" content="Linux" />
+    <meta property="article:tag" content="PHP" />
+    <meta property="article:tag" content="codeigniter" />
+    <meta property="article:tag" content="Vagrant" />
+    <meta property="article:tag" content="EasyEngine" />
+    
+    <meta property="article:publisher" content="https://www.facebook.com/experttyce" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox" />
+    <meta name="twitter:description" content="Para el desarrollo web con PHP, existen diferentes opciones para comenzar a aprender o desarrollar aplicaciones profesionales con este lenguaje. Para ello existen varias alternativas llamados AMP (Apache, MySQL/MariaDB, Perl/PHP/Python), se clasifican en LAMPs (para Linux), WAMPs (para Windows), MAMPs (para macOS). Esta es la lista de" />
+    <meta name="twitter:url" content="http://localhost:2368/servidor-de-desarrollo-lemp-con-la-ayuda-de-easyengine-vagrant-y-virtualbox/" />
+    <meta name="twitter:image" content="http://localhost:2368/content/images/2018/01/---2-.png" />
+    <meta name="twitter:label1" content="Written by" />
+    <meta name="twitter:data1" content="carlos" />
+    <meta name="twitter:label2" content="Filed under" />
+    <meta name="twitter:data2" content="Linux, PHP, codeigniter, Vagrant, EasyEngine" />
+    <meta name="twitter:site" content="@experttyce" />
+    <meta property="og:image:width" content="640" />
+    <meta property="og:image:height" content="426" />
+    
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "publisher": {
+        "@type": "Organization",
+        "name": "expertTyCE",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "http://localhost:2368/content/images/2018/01/beaverton--1--2.png",
+            "width": 60,
+            "height": 60
+        }
+    },
+    "author": {
+        "@type": "Person",
+        "name": "carlos",
+        "image": {
+            "@type": "ImageObject",
+            "url": "http://localhost:2368/content/images/2018/07/carlos-b-w.jpg",
+            "width": 640,
+            "height": 480
+        },
+        "url": "http://localhost:2368/author/carlos/",
+        "sameAs": []
+    },
+    "headline": "Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox",
+    "url": "http://localhost:2368/servidor-de-desarrollo-lemp-con-la-ayuda-de-easyengine-vagrant-y-virtualbox/",
+    "datePublished": "2018-01-06T18:20:31.000Z",
+    "dateModified": "2018-01-08T00:13:54.000Z",
+    "image": {
+        "@type": "ImageObject",
+        "url": "http://localhost:2368/content/images/2018/01/---2-.png",
+        "width": 640,
+        "height": 426
+    },
+    "keywords": "Linux, PHP, codeigniter, Vagrant, EasyEngine",
+    "description": "Para el desarrollo web con PHP, existen diferentes opciones para comenzar a aprender o desarrollar aplicaciones profesionales con este lenguaje. Para ello existen varias alternativas llamados AMP (Apache, MySQL/MariaDB, Perl/PHP/Python), se clasifican en LAMPs (para Linux), WAMPs (para Windows), MAMPs (para macOS). Esta es la lista de",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "http://localhost:2368/"
+    }
+}
+    </script>
+
+    <meta name="generator" content="Ghost 1.25" />
+    <link rel="alternate" type="application/rss+xml" title="expertTyCE" href="../../rss/index.html" />
+
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway:400,700|Roboto+Slab:300,400" />
+    <style amp-custom>
+        /* ==========================================================================
+           Table of Contents
+           ========================================================================== */
+
+        /*
+
+            0. Normalize
+            1. General
+            2. Utilities
+            3. AMP Post
+            4. Footer
+
+        */
+
+        /* ==========================================================================
+           0. normalize.css v3.0.3 | MIT License | git.io/normalize | (minified)
+           ========================================================================== */
+
+        html {
+            font-family: sans-serif;
+
+            -ms-text-size-adjust: 100%;
+            -webkit-text-size-adjust: 100%;
+        }
+        body {
+            margin: 0;
+        }
+        article,
+        aside,
+        details,
+        figcaption,
+        figure,
+        footer,
+        header,
+        main,
+        menu,
+        nav,
+        section,
+        summary {
+            display: block;
+        }
+        audio,
+        canvas,
+        progress,
+        video {
+            display: inline-block;
+            vertical-align: baseline;
+        }
+        audio:not([controls]) {
+            display: none;
+            height: 0;
+        }
+        [hidden],
+        template {
+            display: none;
+        }
+        a {
+            background-color: transparent;
+        }
+        a:active,
+        a:hover {
+            outline: 0;
+        }
+        abbr[title] {
+            border-bottom: 1px dotted;
+        }
+        b,
+        strong {
+            font-weight: bold;
+        }
+        dfn {
+            font-style: italic;
+        }
+        h1 {
+            margin: 0.67em 0;
+            font-size: 2em;
+        }
+        mark {
+            background: #ff0;
+            color: #000;
+        }
+        small {
+            font-size: 80%;
+        }
+        sub,
+        sup {
+            position: relative;
+            vertical-align: baseline;
+            font-size: 75%;
+            line-height: 0;
+        }
+        sup {
+            top: -0.5em;
+        }
+        sub {
+            bottom: -0.25em;
+        }
+        img {
+            border: 0;
+        }
+        amp-img {
+            border: 0;
+        }
+        svg:not(:root) {
+            overflow: hidden;
+        }
+        figure {
+            margin: 1em 40px;
+        }
+        hr {
+            box-sizing: content-box;
+            height: 0;
+        }
+        pre {
+            overflow: auto;
+        }
+        code,
+        kbd,
+        pre,
+        samp {
+            font-family: monospace, monospace;
+            font-size: 1em;
+        }
+        button,
+        input,
+        optgroup,
+        select,
+        textarea {
+            margin: 0;
+            color: inherit;
+            font: inherit;
+        }
+        button {
+            overflow: visible;
+        }
+        button,
+        select {
+            text-transform: none;
+        }
+        button,
+        html input[type="button"],
+        input[type="reset"],
+        input[type="submit"] {
+            cursor: pointer;
+
+            -webkit-appearance: button;
+        }
+        button[disabled],
+        html input[disabled] {
+            cursor: default;
+        }
+        button::-moz-focus-inner,
+        input::-moz-focus-inner {
+            padding: 0;
+            border: 0;
+        }
+        input {
+            line-height: normal;
+        }
+        input[type="checkbox"],
+        input[type="radio"] {
+            box-sizing: border-box;
+            padding: 0;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            height: auto;
+        }
+        input[type="search"] {
+            -webkit-appearance: textfield;
+        }
+        input[type="search"]::-webkit-search-cancel-button,
+        input[type="search"]::-webkit-search-decoration {
+            -webkit-appearance: none;
+        }
+        fieldset {
+            margin: 0 2px;
+            padding: 0.35em 0.625em 0.75em;
+            border: 1px solid #c0c0c0;
+        }
+        legend {
+            padding: 0;
+            border: 0;
+        }
+        textarea {
+            overflow: auto;
+        }
+        optgroup {
+            font-weight: bold;
+        }
+        table {
+            border-spacing: 0;
+            border-collapse: collapse;
+        }
+        td,
+        th {
+            padding: 0;
+        }
+
+
+        /* ==========================================================================
+           1. General - Setting up some base styles
+           ========================================================================== */
+
+        html {
+            max-height: 100%;
+            height: 100%;
+            font-size: 62.5%;
+
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        }
+
+        body {
+            max-height: 100%;
+            height: 100%;
+            color: #3a4145;
+            background: #f4f8fb;
+            letter-spacing: 0.01rem;
+            font-family: "Raleway", sans-serif;
+            font-size: 1.8rem;
+            line-height: 1.75em;
+            text-rendering: geometricPrecision;
+
+            -webkit-font-feature-settings: "kern" 1;
+            -moz-font-feature-settings: "kern" 1;
+            -o-font-feature-settings: "kern" 1;
+        }
+
+        ::-moz-selection {
+            background: #d6edff;
+        }
+
+        ::selection {
+            background: #d6edff;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            margin: 0 0 0.3em 0;
+            color: #2e2e2e;
+            font-family: "Roboto Slab", Georgia, serif;
+            line-height: 1.15em;
+            text-rendering: geometricPrecision;
+
+            -webkit-font-feature-settings: "dlig" 1, "liga" 1, "lnum" 1, "kern" 1;
+            -moz-font-feature-settings: "dlig" 1, "liga" 1, "lnum" 1, "kern" 1;
+            -o-font-feature-settings: "dlig" 1, "liga" 1, "lnum" 1, "kern" 1;
+        }
+
+        h1 {
+            text-indent: -2px;
+            letter-spacing: -1px;
+            font-size: 2.6rem;
+        }
+
+        h2 {
+            letter-spacing: 0;
+            font-size: 2.4rem;
+        }
+
+        h3 {
+            letter-spacing: -0.6px;
+            font-size: 2.1rem;
+        }
+
+        h4 {
+            font-size: 1.9rem;
+        }
+
+        h5 {
+            font-size: 1.8rem;
+        }
+
+        h6 {
+            font-size: 1.8rem;
+        }
+
+        a {
+            color: #4a4a4a;
+        }
+
+        a:hover {
+            color: #111;
+        }
+
+        p,
+        ul,
+        ol,
+        dl {
+            margin: 0 0 2.5rem 0;
+            font-size: 1.5rem;
+            text-rendering: geometricPrecision;
+
+            -webkit-font-feature-settings: "liga" 1, "onum" 1, "kern" 1;
+            -moz-font-feature-settings: "liga" 1, "onum" 1, "kern" 1;
+            -o-font-feature-settings: "liga" 1, "onum" 1, "kern" 1;
+        }
+
+        ol,
+        ul {
+            padding-left: 2em;
+        }
+
+        ol ol,
+        ul ul,
+        ul ol,
+        ol ul {
+            margin: 0 0 0.4em 0;
+            padding-left: 2em;
+        }
+
+        dl dt {
+            float: left;
+            clear: left;
+            overflow: hidden;
+            margin-bottom: 1em;
+            width: 180px;
+            text-align: right;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 700;
+        }
+
+        dl dd {
+            margin-bottom: 1em;
+            margin-left: 200px;
+        }
+
+        li {
+            margin: 0.4em 0;
+        }
+
+        li li {
+            margin: 0;
+        }
+
+        hr {
+            display: block;
+            margin: 1.75em 0;
+            padding: 0;
+            height: 1px;
+            border: 0;
+            border-top: #efefef 1px solid;
+        }
+
+        blockquote {
+            box-sizing: border-box;
+            margin: 1.75em 0 1.75em 0;
+            padding: 0 0 0 1.75em;
+            border-left: #4a4a4a 0.4em solid;
+
+            -moz-box-sizing: border-box;
+        }
+
+        blockquote p {
+            margin: 0.8em 0;
+            font-style: italic;
+        }
+
+        blockquote small {
+            display: inline-block;
+            margin: 0.8em 0 0.8em 1.5em;
+            color: #ccc;
+            font-size: 0.9em;
+        }
+
+        blockquote small:before {
+            content: "\2014 \00A0";
+        }
+
+        blockquote cite {
+            font-weight: 700;
+        }
+
+        blockquote cite a {
+            font-weight: normal;
+        }
+
+        mark {
+            background-color: #fdffb6;
+        }
+
+        code,
+        tt {
+            padding: 1px 3px;
+            border: #e3edf3 1px solid;
+            background: #f7fafb;
+            border-radius: 2px;
+            white-space: pre-wrap;
+            font-family: Consolas, Inconsolata, monospace, sans-serif;
+            font-size: 0.85em;
+            font-feature-settings: "liga" 0;
+
+            -webkit-font-feature-settings: "liga" 0;
+            -moz-font-feature-settings: "liga" 0;
+        }
+
+        pre {
+            overflow: auto;
+            box-sizing: border-box;
+            margin: 0 0 1.75em 0;
+            padding: 10px;
+            width: 100%;
+            border: #e3edf3 1px solid;
+            background: #f7fafb;
+            border-radius: 3px;
+            white-space: pre;
+            font-family: Consolas, Inconsolata, monospace, sans-serif;
+            font-size: 0.9em;
+
+            -moz-box-sizing: border-box;
+        }
+
+        pre code,
+        pre tt {
+            padding: 0;
+            border: none;
+            background: transparent;
+            white-space: pre-wrap;
+            font-size: inherit;
+        }
+
+        kbd {
+            display: inline-block;
+            margin-bottom: 0.4em;
+            padding: 1px 8px;
+            border: #ccc 1px solid;
+            background: #f4f4f4;
+            border-radius: 4px;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2),
+            0 1px 0 0 #fff inset;
+            color: #666;
+            text-shadow: #fff 0 1px 0;
+            font-size: 0.9em;
+            font-weight: 700;
+        }
+
+        table {
+            box-sizing: border-box;
+            margin: 1.75em 0;
+            max-width: 100%;
+            width: 100%;
+            background-color: transparent;
+
+            -moz-box-sizing: border-box;
+        }
+
+        table th,
+        table td {
+            padding: 8px;
+            border-top: #efefef 1px solid;
+            vertical-align: top;
+            text-align: left;
+            line-height: 20px;
+        }
+
+        table th {
+            color: #000;
+        }
+
+        table caption + thead tr:first-child th,
+        table caption + thead tr:first-child td,
+        table colgroup + thead tr:first-child th,
+        table colgroup + thead tr:first-child td,
+        table thead:first-child tr:first-child th,
+        table thead:first-child tr:first-child td {
+            border-top: 0;
+        }
+
+        table tbody + tbody {
+            border-top: #efefef 2px solid;
+        }
+
+        table table table {
+            background-color: #fff;
+        }
+
+        table tbody > tr:nth-child(odd) > td,
+        table tbody > tr:nth-child(odd) > th {
+            background-color: #f6f6f6;
+        }
+
+        table.plain tbody > tr:nth-child(odd) > td,
+        table.plain tbody > tr:nth-child(odd) > th {
+            background: transparent;
+        }
+
+        iframe,
+        amp-iframe,
+        .fluid-width-video-wrapper {
+            display: block;
+            margin: 1.75em 0;
+        }
+
+        /* When a video is inside the fitvids wrapper, drop the
+        margin on the iframe, cause it breaks stuff. */
+        .fluid-width-video-wrapper iframe,
+        .fluid-width-video-wrapper amp-iframe {
+            margin: 0;
+        }
+
+        textarea,
+        select,
+        input {
+            margin: 0 0 5px 0;
+            padding: 6px 9px;
+            width: 260px;
+            outline: 0;
+            border: #e7eef2 1px solid;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: none;
+            font-family: "Roboto Slab", Georgia, serif;
+            font-size: 1.6rem;
+            line-height: 1.4em;
+            font-weight: 100;
+
+            -webkit-appearance: none;
+        }
+
+        textarea {
+            min-width: 250px;
+            min-height: 80px;
+            max-width: 340px;
+            width: 100%;
+            height: auto;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="search"]:focus,
+        input[type="tel"]:focus,
+        input[type="url"]:focus,
+        input[type="password"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        input[type="month"]:focus,
+        input[type="week"]:focus,
+        input[type="time"]:focus,
+        input[type="datetime"]:focus,
+        input[type="datetime-local"]:focus,
+        textarea:focus {
+            outline: none;
+            outline-width: 0;
+            border: #bbc7cc 1px solid;
+            background: #fff;
+        }
+
+        select {
+            width: 270px;
+            height: 30px;
+            line-height: 30px;
+        }
+
+        /* ==========================================================================
+           2. Utilities
+           ========================================================================== */
+
+        /* Clears shit */
+        .clearfix:before,
+        .clearfix:after {
+            content: " ";
+            display: table;
+        }
+        .clearfix:after {
+            clear: both;
+        }
+        .clearfix {
+            zoom: 1;
+        }
+
+        /* ==========================================================================
+           3. AMP Post
+           ========================================================================== */
+
+
+
+        .main-header {
+            position: relative;
+            display: table;
+            overflow: hidden;
+            box-sizing: border-box;
+            width: 100%;
+            height: 50px;
+            background: #56817A no-repeat center center;
+            background-size: cover;
+            text-align: left;
+
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+        }
+
+        .content {
+            background: #fff;
+            padding-top: 15px;
+        }
+        .blog-title,
+        .content {
+            margin: auto;
+            max-width: 600px;
+        }
+
+        .blog-title a {
+            display: block;
+            padding-right: 16px;
+            padding-left: 16px;
+            height: 50px;
+            color: #fff;
+            text-decoration: none;
+            font-family: "Roboto Slab", Georgia, serif;
+            font-size: 18px;
+            line-height: 50px;
+            font-weight: 600;
+        }
+
+        .post {
+            position: relative;
+            margin-top: 0;
+            margin-right: 16px;
+            margin-left: 16px;
+            padding-bottom: 0;
+            max-width: 100%;
+            border-bottom: #ebf2f6 1px solid;
+            word-wrap: break-word;
+            font-size: 0.95em;
+            line-height: 1.65em;
+        }
+
+        .post-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .post-title {
+            margin-bottom: 0;
+        }
+
+        .post-title a {
+            text-decoration: none;
+        }
+
+        .post-meta {
+            display: block;
+            margin: 3px 0 0 0;
+            color: #9eabb3;
+            font-family: "Roboto Slab", Georgia, serif;
+            font-size: 1.3rem;
+            line-height: 2.2rem;
+        }
+
+        .post-meta a {
+            color: #9eabb3;
+            text-decoration: none;
+        }
+
+        .post-meta a:hover {
+            text-decoration: underline;
+        }
+
+        .post-meta .author {
+            margin: 0;
+            font-size: 1.3rem;
+            line-height: 1.3em;
+        }
+
+        .post-date {
+            display: inline-block;
+            text-transform: uppercase;
+            white-space: nowrap;
+            font-size: 1.2rem;
+            line-height: 1.2em;
+        }
+
+        .post-image {
+            margin: 0;
+            padding-top: 3rem;
+            padding-bottom: 30px;
+            border-top: 1px #E8E8E8 solid;
+        }
+
+        /* Keep images centered, and allow images wider than the main
+           text column to break out. */
+        .post-content amp-img,
+        .post-content amp-anim {
+            /* Centers an image by (1) pushing its left edge to the
+               center of its container and (2) shifting the entire image
+               in the opposite direction by half its own width.
+               Works for images that are larger than their containers. */
+            position: relative;
+            left: 50%;
+            display: block;
+            padding: 0;
+            min-width: 0;
+            max-width: 112%; /* fallback when calc doesn't work */
+            width: calc(100% + 32px); /* expand with to image + margins */
+            height: auto;
+            transform: translateX(-50%);
+
+            -webkit-transform: translateX(-50%); /* for Safari and iOS */
+            -ms-transform: translateX(-50%); /* for IE9 */
+        }
+
+        .footnotes {
+            font-size: 1.3rem;
+            line-height: 1.6em;
+            font-style: italic;
+        }
+
+        .footnotes li {
+            margin: 0.6rem 0;
+        }
+
+        .footnotes p {
+            margin: 0;
+        }
+
+        .footnotes p a:last-child {
+            text-decoration: none;
+        }
+
+        /* ==========================================================================
+           4. Footer - The bottom the AMP Post
+           ========================================================================== */
+
+        .site-footer {
+            position: relative;
+            margin: 0 auto 20px auto;
+            padding: 1rem 15px;
+            max-width: 600px;
+            color: rgba(0,0,0,0.5);
+            font-family: "Roboto Slab", Georgia, serif;
+            font-size: 1.1rem;
+            line-height: 1.75em;
+        }
+
+        .site-footer a {
+            color: rgba(0,0,0,0.5);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .site-footer a:hover {
+            border-bottom: #bbc7cc 1px solid;
+        }
+
+        .poweredby {
+            display: block;
+            float: right;
+            width: 45%;
+            text-align: right;
+        }
+
+        .copyright {
+            display: block;
+            float: left;
+            width: 45%;
+        }
+    </style>
+
+    <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
+    <script async src="https://cdn.ampproject.org/v0.js"></script>
+
+    
+
+</head>
+
+<body class="amp-template">
+    <header class="main-header">
+        <nav class="blog-title">
+            <a href="../../index.html">expertTyCE</a>
+        </nav>
+    </header>
+
+    <main class="content" role="main">
+        <article class="post">
+
+            <header class="post-header">
+                <h1 class="post-title">Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox</h1>
+                <section class="post-meta">
+                    <p class="author">
+                        by <a href="../../author/carlos/index.html">carlos</a> |
+                    <time class="post-date" datetime="2018-01-06">2018-01-06</time>
+                    </p>
+                </section>
+            </header>
+            <figure class="post-image">
+                <amp-img src="http://localhost:2368/content/images/2018/01/---2-.png" width="600" height="400" layout="responsive"></amp-img>
+            </figure>
+            <section class="post-content">
+
+                <div class="kg-card-markdown"><p>Para el desarrollo web con PHP, existen diferentes opciones para comenzar a aprender o desarrollar aplicaciones profesionales con este lenguaje.</p>
+<p>Para ello existen varias alternativas llamados AMP (Apache, MySQL/MariaDB, Perl/PHP/Python), se clasifican en LAMPs (para Linux), WAMPs (para Windows), MAMPs (para macOS). Esta es la lista de soluciones para las plataformas mas comunes</p>
+<table>
+    <thead>
+        <tr>
+            <th>Paquete</th>
+            <th>Plataforma</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>AMPPS</td>
+            <td>Windows, macOS, Linux, BSD</td>
+        </tr>
+        <tr>
+            <td>Bitnami LAMP Stack</td>
+            <td>Linux</td>
+        </tr>
+        <tr>
+            <td>Bitnami MAMP Stack</td>
+            <td>macOS</td>
+        </tr>
+        <tr>
+            <td>Bitnami WAMP Stack</td>
+            <td>Windows</td>
+        </tr>
+        <tr>
+            <td>DAMP</td>
+            <td>macOS</td>
+        </tr>
+        <tr>
+            <td>LAMP</td>
+            <td>Linux</td>
+        </tr>
+        <tr>
+            <td>MAMP</td>
+            <td>Windows, macOS</td>
+        </tr>
+        <tr>
+            <td>XAMPP</td>
+            <td>Windows, Linux, macOS</td>
+        </tr>
+        <tr>
+            <td>Wamp.NET</td>
+            <td>Windows</td>
+        </tr>
+        <tr>
+            <td>WampServer</td>
+            <td>Windows</td>
+        </tr>
+        <tr>
+            <td>Zend Server Community Edition</td>
+            <td>Windows, macOS, Linux, IBMI</td>
+        </tr>
+    </tbody>
+</table>
+<br />
+Existen muchos mas y seguirán surgiendo aun mas. Lo que vamos a realizar en este tutorial es olvidarnos de esa lista y crear nuestro propio ambiente de desarrollo listo para produccion y sin tener que comprometer el sistema operativo base de nuestra computadora.
+<br /><p>
+</p><h3 id="1descargaeinstalaciondevagrantyvirtualbox">1.- Descarga e Instalacion de Vagrant y Virtualbox</h3>
+<p>Comencemos instalando los dos programas requeridos, <a href="https://www.virtualbox.org/wiki/Downloads">VirtualBox</a> y <a href="https://www.vagrantup.com/downloads.html">Vagrant</a> e instalarlos, no importa el orden. Si ya los tienes instalados, asegurate que se encuentren actualizados en la ultima version.</p>
+<p>Una vez instalados, reinicia tu computadora para que reconozca los comandos, todo lo haremos desde linea de comando o consola.</p>
+<h3 id="2buscamosladistribucinlinuxbase">2.- Buscamos la distribución Linux base</h3>
+<p>Elegimos Linux, precisamente por que estamos preparando todo para producción. Existe un <a href="https://app.vagrantup.com/boxes/search">repositorio</a> en el sitio de vagrant donde la comunidad constantemente sube distribuciones linux de todo tipo, es <a href="https://app.vagrantup.com/boxes/search">aqui</a> donde buscaremos nuestra configuracion favorita, para este ejemplo vamos a buscar <a href="https://app.vagrantup.com/boxes/search">Ubuntu 16 LTS de 64 bits</a>.<br />
+<br />
+Selecciona como Provider a VirtualBox y busca Ubuntu 16 como se muestra en la imagen, puedes elegir el que gustes, la cantidad de descarga te puede dar una idea de cuales son las mas populares, nosotros elegiremos <strong>gbarbieru/xenial</strong>, solo copiamos el nombre</p>
+<h3 id="3creaciondearchivovagrantfileyconfiguracion">3.- Creacion de archivo Vagrantfile y configuracion</h3>
+<p>Desde nuestra maquina principal, en la consola o ventana MS-DOS nos dirigimos a una carpeta de trabajo y dentro tecleamos</p>
+<pre><code class="language-bash">$ vagrant init gbarbieru/xenial
+</code></pre>
+<p>Esta acción nos generará un único archivo llamado <strong>Vagrantfile</strong>, abre el archivo con tu editor de textos favorito y vamos a modificar un par de lineas, la mayoria se encuentra comentada.<br />
+Busca la seccion <strong>config.vm.network</strong> y <strong>config.vm.syncedfolder</strong>, quitamos el comentario y en el primer caso, vamos a colocar una direccion IP, esta direccion NO debe de ser igual al de tu red interna, puede ser cualquier otro, si no estas seguro deja la que aparece por defecto, en mi caso voy a dejarla de la siguiente forma</p>
+<pre><code class="language-markup">config.vm.network &quot;private_network&quot;, ip: &quot;192.168.99.10&quot;
+</code></pre>
+<p>En la seccion de <strong>syncedfolder</strong> voy a indicarle la carpeta comun que compartirá mi maquina host y la maquina virtual Linux, los archivos que coloque en ésta carpeta se verán en ambos ambientes. Es aqui donde colocamos nuestro condigo fuente de nuestra aplicacion, para poder editarla desde mi equipo principal y ejecutarla desde la maquina virtual Linux, voy a dejarla de la siguiente forma</p>
+<pre><code class="language-markup">config.vm.synced_folder &quot;./public_html&quot;, &quot;/vagrant_html&quot;
+</code></pre>
+<blockquote>
+<p><strong>Importante</strong>: debes crear la carpeta que vas a compartir entre los dos ambientes antes de levantar la maquina virtual</p>
+</blockquote>
+<p>Desde nuestra maquina principal, voy a crear en esta ubicacion mi carpeta compartida</p>
+<pre><code class="language-bash">$ mkdir public_html
+</code></pre>
+<h3 id="4arrancamosnuestramaquinavirtual">4.- Arrancamos nuestra maquina virtual</h3>
+<p>Ya tenemos listo nuestro archivo de configuracion de Vagrant y nuestra carpeta compartida para Virtualbox, ahora iniciaremos la maquina virtual, seguimos desde linea de comando.</p>
+<pre><code class="language-bash">$ vagrant up
+</code></pre>
+<p>Esta operacion iniciará la maquina virtual, por ser la primera vez que utilizamos esta imagen, la va a descargar del repositorio de vagrant, quizá demore un poco, esto dependerá de tu velocidad de internet. Una vez descargada podrás utilizarla con mas configuraciones y el proceso será mas rapido, si decides cambiar de distribucion Linux, igual la descargará solo la primera vez.<br />
+</p>
+<h3 id="5instalacindeeasyengineycreaciondenuestroprimersitioweb">5.- Instalación de EasyEngine y creacion de nuestro primer sitio web</h3>
+<p>Si todo salió bien, veremos la siguiente imagen<br />
+<br />
+Ahora ya estamos listos para la instalacion del paquete EasyEngine. Esta utileria funciona en distribuciones basadas en Debian, y nos ayudará a crear nuestro sitio web facil y rapido.<br />
+Entramos a nuestro ambiente Linux con el comando</p>
+<pre><code class="language-bash">$ vagrant ssh
+</code></pre>
+<p>así de sencillo, no necesitamos instalar ninguna otra aplicacion y tampoco necesitamos de configuraciones complejas, solo basta con estar ubicado en la carpeta de trabajo desde la linea de comandos. ¿Como sabemos que estamos en Linux?, cuando veamos el prompt <strong>vagrant@vagrant:~$</strong><br />
+La primera vez haremos una actualizacion de nuestro Linux. Desde nuestra maquina virtual tecleamos,</p>
+<pre><code class="language-bash">$ sudo apt update
+$ sudo apt upgrade
+</code></pre>
+<p>Si les sale esta pantalla<br />
+<br />
+preguntando por la instalacion de GRUB, elijan la primera opcion y opriman la barra espaciadora para marcarla y luego enter.<br />
+Es posible que salgan mas confirmaciones, lean de que se trata y si no estan seguros, solo opriman enter.<br />
+Ya terminamos de instalar nuestro SO Linux, ahora tecleamos</p>
+<pre><code class="language-bash">$ wget -qO ee rt.cx/ee &amp;&amp; sudo bash ee
+</code></pre>
+<p>Esta operacion instalará el paquete EasyEngine y solo lo haremos una vez. En alguna parte de la instalación preguntará por tu nombre y correo electronico, proporciona un correo válido, ahi te llegarán los avisos de actualizaciones.<br />
+<br />
+Una vez terminado ahora si vamos a crer nuestro sitio web, con esta utileria podemos crear hasta 14 tipos diferentes de sitios web incluido Wordpress.<br />
+Lo que nos ocupa el dia de hoy es nuestro ambiente LEMP y lo creamos</p>
+<pre><code class="language-bash">$ sudo ee site create mipagina.com --mysql --php7
+</code></pre>
+<p>Con esta instruccion vamos a crear un sitio web llamado &quot;mipagina.com&quot; con soporte para PHP, base de datos MySQL y servidor Web NGINX.<br />
+Despues de esperar a que descargara todo lo necesario, llegamos a esta imagen<br />
+<br />
+Tomen nota de lo marcado, ese usuario y contraseña lo utilizaremos mas adelante<br />
+Ya tenemos creado nuestro sitio web y podemos verlo en la URL <a href="http://mipagina.com">http://mipagina.com</a>, pero para que esto sea posible vamos a editar un archivo en nuestra maquina principal, dejamos la virtual por un momento y buscamos en nuestro equipo el archivo <strong>host</strong></p>
+<ul>
+<li>Linux o Mac se encuentra en /etc/host</li>
+<li>Windows se encuentra en c:\Windows\System32\drivers\etc\</li>
+</ul>
+<p>Desde nuestra maquina principal, editamos el archivo con permisos de administrador y agregamos la siguiente linea</p>
+<pre><code class="language-markup">192.168.99.10  mipagina.com
+</code></pre>
+<p>La ip de nuestra maquina virtual, la que se definió al principio del tutorial, y el dominio ficticio de nuestro sitio web, de esta forma la computadora resolverá ese nombre localmente cuando la solicitemos desde un navegador.<br />
+Guardamos cambios y hacemos pruebas.<br />
+Desde el navegador entramos al direccion <a href="http://mipagina.com">http://mipagina.com</a><br />
+<br />
+Si ven esta imagen, quiere decir que estamos bien, no te preocupes del mensaje por el momento.</p>
+<h3 id="6configuraciondelsitiowebalacarpetacompartida">6.- Configuracion del sitio web a la carpeta compartida</h3>
+<p>En este paso vamos a editar un poco los archivos de configuracion de NGIX, para que apunte a la carpeta de nuestro codigo fuente, por defecto los directorios de sitios web los aloja en /var/www, vamos a modificar esa ruta.<br />
+Primero que nada, dentro de mi carpeta compartida public_html.<br />
+Desde nuestra maquina principal, voy a crear otra carpeta llamada <strong>mipagina_com</strong><br />
+<br />
+Mi intencion es la de crear varios sitios web y cada una con su propia carpeta dentro de public_html</p>
+<p>Desde la maquina virtual tecleamos</p>
+<pre><code class="language-bash">$ sudo vim /etc/nginx/sites-enabled/mipagina.com 
+</code></pre>
+<p>busquen la seccion <code>root /var/www/mipagina.com/htdocs;</code> y cambienla por <code>root /vagrant_html/mipagina_com;</code> guardamos en vim con <code>:wq</code>, si no estas acostumbrado a usar VIM, puedes usar nano o cualquier otro editor de textos para consolo en Linux.<br />
+Comprobamos si no hay errores en el archivo de configuracion y reiniciamos el servicio de NGINX</p>
+<pre><code class="language-bash">$ sudo nginx -t
+$ sudo systemctl restart nginx
+</code></pre>
+<p>Desde nuestra maquina principal, vamos a nuestra carpeta <strong>mipagina_com</strong> y dentro vamos a crear un archivo de prueba index.html para comprobar si realmente esta apuntando a nuestra carpeta compartida<br />
+,<br />
+en mi caso solo puse dentro del archivo index.html Hola Mundo y recargamos la pagina para ver el resultado</p>
+<h3 id="7configurandobasededatosmysql">7.- Configurando base de datos MySQL</h3>
+<p>Hasta aqui ya tenemos nuestro sitio web funcionando, puedes colocar en tu carpeta compartida tu codigo fuente y NGINX lo interpretará, cualquier cambio que realices desde tu equipo principal se verá reflejado inmediatamente.<br />
+Vamos con la parte de base de datos, al crear el sitio, le indicamos que queriamos una base de datos MySQL, pero ¿donde esta ubicado mi base de datos y como accedo a ella?.<br />
+Desde nuestra maquina virtual, nos dirigimos a la carpeta <code>/var/www/mipagina.com</code><br />
+<br />
+observen el contenido del archivo <code>ee-config.php</code> tecleando</p>
+<pre><code class="language-bash">$ cat ee-config.php
+</code></pre>
+<p>y tomen nota del contenido, ahi viene el usuario, base de datos y contraseña que creo para nuestro sitio mipagina.com, con esta informacion podemos conectarnos a la base de datos desde linea de comandos tecleando</p>
+<pre><code class="language-bash">$ mysql -u mipagina_com -pZu5QcM7w6WEkO41 mipagina_com
+</code></pre>
+<p><em>coloquen la informacion de su archivo, puede ser diferente la contraseña.</em></p>
+<p>Pero no queremos usar linea de comando para administrar nuestra base de datos, entonces procederemos a instalar phpmyadmin</p>
+<pre><code class="language-bash">$ sudo apt install composer -y
+$ sudo ee stack install --phpmyadmin
+$ cd /var/www/22222/htdocs/db/pma/
+$ composer install --no-dev
+</code></pre>
+<p>Basicamente lo que hicimos fue instalar composer, despues el stack de phpmyadmin y para poder instalar las dependencias nos cambiamos al directorio de instalacion e instalamos el resto con composer</p>
+<p>Una vez terminado, vamos a entrar a phpmyadmin a traves del sitio de administracion de EasyEngine, se acuerdan del usuario y contraseña que les pedí que tomaran nota en el paso 5, es ahora cuando lo utilizaremos.<br />
+Desde nuestra maquina principal, entramos en cualquier navegador web y vamos a la url <a href="https://192.168.99.10:22222/">https://192.168.99.10:22222/</a>, es un sitio https no certificado, el navegador pedira agregar una excepcion.<br />
+</p>
+<p>El contenido serán unos enlaces a directorios <code>db, fpm, php</code>, damos click en <code>db</code> y luego en <code>pma</code> y ya estaremos en phpmyadmin, ahora vamos a utilizar el usuario y contraseña que recuperamos del archivo <strong>ee-config.php</strong> del paso 7<br />
+el resultado es esta pantalla<br />
+</p>
+<p>Ya tenemos listo nuestro sitio web y tambien a la base de datos MySQL, si deseas agregar otro sitio, en resumen éstos serian los pasos:</p>
+<ol>
+<li>Desde la maquina virtual teclear <code>$ sudo ee site create miotrapagina.com --mysql --php7</code></li>
+<li>Desde nuestra maquina principal, creas una carpeta dentro de public_html para alojar tu codigo fuente</li>
+<li>Desde nuestra maquina principal, agregamos en el archivo <code>host</code> la linea <code>192.168.99.10 miotrapagina.com</code></li>
+<li>Desde la maquina virtual, editamos el archivo de configuracion de Nginx <code>$ sudo vim /etc/nginx/sites-enabled/miotrapagina.com</code>, cambiamos la ruta y reinciamos servicio <code>$ sudo nginx -t</code> y si no hay error <code>$ sudo systemctl restart nginx</code></li>
+<li>Explorar el contenido del archivo <code>ee-config.php</code> para obtener la base de datos, usuario y contraseña para este sitio.</li>
+</ol>
+<p>Puedes tener en el mismo ambiente de desarrollo todos los sitios que desees con la misma direccion IP, solo hay que elegir un dominio ficticio diferente, incluso sitios de Wordpress.</p>
+</div>
+
+            </section>
+
+        </article>
+    </main>
+    <footer class="site-footer clearfix">
+        <section class="copyright"><a href="../../index.html">expertTyCE</a> &copy; 2018</section>
+        <section class="poweredby">
+            Proudly published with <a href="https://ghost.org">Ghost</a>  and <a href="https://github.com/kelyvin/caffeine-theme" target="_blank">Caffeine Theme</a>
+        </section>
+    </footer>
+</body>
+</html>

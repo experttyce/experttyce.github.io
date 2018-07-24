@@ -1,0 +1,1594 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title><![CDATA[expertTyCE]]></title><description><![CDATA[la mayoría de los buenos programadores hacen programación no porque esperan que les paguen o para que el público los adule, sino porque es divertido programar.]]></description><link>http://localhost:2368/</link><image><url>http://localhost:2368/favicon.png</url><title>expertTyCE</title><link>http://localhost:2368/</link></image><generator>Ghost 1.25</generator><lastBuildDate>Tue, 24 Jul 2018 20:27:17 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title><![CDATA[Utilizando Socket.IO y Bootstrap progressbar]]></title><description><![CDATA[<div class="kg-card-markdown"><p>En este tutorial vamos a crear una sencilla aplicacion que mostrará una barra de progreso cuando una tarea en segundo plano se encuentra ejecutandose. Para comenzar vamos a crear un servidor socket.io con la ayuda NodeJS, NGINX y PM2, el cliente lo desarrollaremos en PHP y Javascript, ademas de</p></div>]]></description><link>http://localhost:2368/utilizando-socket-io/</link><guid isPermaLink="false">5b5788fbb701761577943d52</guid><category><![CDATA[socket.io]]></category><category><![CDATA[PHP]]></category><category><![CDATA[codeigniter]]></category><category><![CDATA[javascript]]></category><category><![CDATA[Jquery]]></category><category><![CDATA[Ajax]]></category><category><![CDATA[Linux]]></category><category><![CDATA[SysAdmin]]></category><dc:creator><![CDATA[carlos]]></dc:creator><pubDate>Sat, 28 Apr 2018 19:08:04 GMT</pubDate><media:content url="http://localhost:2368/content/images/2018/04/socket-logo.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://localhost:2368/content/images/2018/04/socket-logo.png" alt="Utilizando Socket.IO y Bootstrap progressbar"><p>En este tutorial vamos a crear una sencilla aplicacion que mostrará una barra de progreso cuando una tarea en segundo plano se encuentra ejecutandose. Para comenzar vamos a crear un servidor socket.io con la ayuda NodeJS, NGINX y PM2, el cliente lo desarrollaremos en PHP y Javascript, ademas de utilizar Python para enviar los estados de la barra de progreso.</p>
+<p>Como es costumbre en mis tutoriales, utilizo un ambiente de desarrollo lo mas parecido a produccion con ayuda de Vagrant y VirtualBox, si deseas saber como crear un ambiente de desarrollo visita este <a href="https://www.experttyce.com/servidor-de-desarrollo-lemp-con-la-ayuda-de-easyengine-vagrant-y-virtualbox/">link</a>. Comenzaremos instalando NodeJS de forma global utilizando el metodo de <a href="http://www.marcominetti.net/personal/blog/2015/09/install-system-wide-node-js-with-nvm-the-painless-way">Marco Minetti</a></p>
+<pre><code class="language-bash">vagrant@vagrant:~$ sudo -i
+root@vagrant:~# apt-get -y install gcc make curl git python python-dev libssl-dev build-essential  
+
+root@vagrant:~# curl https://raw.githubusercontent.com/creationix/nvm/v0.30.1/install.sh | NVM_DIR=/usr/local/nvm PROFILE=/etc/bash.bashrc bash
+
+root@vagrant:~# source ~/.bashrc
+
+root@vagrant:~# nvm install stable
+root@vagrant:~# nvm alias default stable
+
+root@vagrant:~# echo &quot;#\!/bin/bash
+export NVM_DIR=\&quot;/usr/local/nvm\&quot;
+[ -s \&quot;\$NVM_DIR/nvm.sh\&quot; ] &amp;&amp; . \&quot;\$NVM_DIR/nvm.sh\&quot;
+node \$@&quot; &gt; /usr/local/bin/node
+chmod +x /usr/local/bin/node
+
+root@vagrant:~# echo &quot;#\!/bin/bash
+export NVM_DIR=\&quot;/usr/local/nvm\&quot;
+[ -s \&quot;\$NVM_DIR/nvm.sh\&quot; ] &amp;&amp; . \&quot;\$NVM_DIR/nvm.sh\&quot;
+npm \$@&quot; &gt; /usr/local/bin/npm
+chmod +x /usr/local/bin/npm
+
+root@vagrant:~# exit
+
+vagrant@vagrant:~$ node -v
+v10.0.0
+
+vagrant@vagrant:~$ npm -v
+5.6.0
+</code></pre>
+<p>En estas instrucciones estoy incluyendo el prompt bash para distinguir cuando estamos como usuario vagrant y como super usuario.</p>
+<p>Para poder instalar un paquete global, debemos de entrar como super usuario e instalar el paqute con <code>npm install -g</code> o utilizar <code>sudo npm install -g</code> , todos los paquetes globales estarán disponibles para cualquier usuario agregando esta linea al final del archivo <code>/etc/profile</code></p>
+<pre><code class="language-vim">export PATH=$PATH:/usr/local/nvm/versions/node/v10.0.0/bin
+</code></pre>
+<p>La ruta va a depender de la version de NodeJS instalada</p>
+<p>Ahora ya tenemos listo nodejs y npm, vamos comenzar nuestro proyecto nodejs en la carpeta que tu desees con el usuario vagrant, en mi caso la carpeta se llama server en home de vagrant.</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ npm init --yes
+</code></pre>
+<p>El resultado se muestra en pantalla</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;server&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;&quot;,
+  &quot;main&quot;: &quot;index.js&quot;,
+  &quot;scripts&quot;: {
+    &quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 1&quot;
+  },
+  &quot;keywords&quot;: [],
+  &quot;author&quot;: &quot;&quot;,
+  &quot;license&quot;: &quot;ISC&quot;
+}
+</code></pre>
+<p>Ahora instalaremos solo dos paquetes</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ npm install express socketio --save
+</code></pre>
+<p>Con el editor de textos vim voy a crear un archivo llamado index.js y colocar el siguiente codigo</p>
+<pre><code class="language-javascript">var app = require('express')();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+io.on('connection', function (socket){
+  socket.on('bar', function (msg) {
+    socket.broadcast.emit('bar', msg);
+  });
+  socket.on('progress', function (data) {
+    socket.broadcast.emit('progress', data);
+  });
+});
+http.listen(3001, function () {
+  console.log('listening on *:3001');
+});
+</code></pre>
+<p>En este codigo estoy creando dos canales <code>bar</code> y <code>progress</code>, el primero se encargará de mostrar u ocultar la barra de progreso, y la segunda se encargará de enviar el valor actual del progreso.</p>
+<p>Probamos si nuestro codigo esta funcionando</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ node index.js
+</code></pre>
+<p>deben ver el mensaje de log <code>listening on *:3001</code></p>
+<p>Bien, ahora dejaremos este proceso como servicio que se ejecutará siempre que se encuentre encendido nuestro servidor y sirviendo como punto de entrada NGINX.<br>
+Lo primero que haremos será instalar el paquete PM2 global</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ sudo npm install -g pm2
+</code></pre>
+<p>Ahora iniciamos nuestro pequeño programa con PM2</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ pm2 start index.js
+</code></pre>
+<p>Y generamos la instruccion del servicio</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ pm2 startup systemd
+</code></pre>
+<p>Nos mostrará en la pantalla la instruccion que debemos ejecutar para crear el servicio en systemd, es algo parecido a esto</p>
+<pre><code class="language-bash">sudo env PATH=$PATH:/usr/local/nvm/versions/node/v10.0.0/bin /usr/local/nvm/versions/node/v10.0.0/lib/node_modules/pm2/bin/pm2 startup systemd -u vagrant --hp /home/vagrant
+</code></pre>
+<p>El resultado despues de ejecutar esta instruccion se vera como la imagen<br>
+<img src="http://localhost:2368/content/images/2018/04/Screen-Shot-2018-04-28-at-1.44.43-PM.png" alt="Utilizando Socket.IO y Bootstrap progressbar"></p>
+<p>De esta forma ya tenemos instalado nuestro servicio que se ejecutará cada vez que iniciemos nuestro servidor, en este caso estamos en desarrollo, pero tambien sirve para produccion, es lo grandioso de trabajar con vagrant y virtualbox.<br>
+Podemos comprobar si efectivamente está ejecutandose el programa con estas instrucciones</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ pm2 monit
+</code></pre>
+<p>o verificando los puertos abiertos, acuerdense que nuestra aplicacion esta corriendo en el puerto 3001</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ netstat -pantl | grep 3001
+</code></pre>
+<p>Bien, ahora vamos a instalar nginx que nos va a servir como proxy hacia nuestro socket.</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ sudo apt install nginx
+</code></pre>
+<p>Si checamos los puertos abiertos buscando el puerto 80, comprobaremos si el servicio NGINX se levantó correctamente</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ netstat -pantl | grep 80
+</code></pre>
+<p>Ahora agregaremos el virtualhost en NGINX que servirá de entrada a nuestra aplicacion de nodejs, para ello nos dirigimos a la carpeta <code>/etc/nginx/sites-available</code>, aqui solo encontrarás un archivo que contiene la configuracion por defecto de el servidor web.<br>
+Vamos a crear con permisos de superusuario un archivo llamado <code>socketio</code></p>
+<pre><code class="language-bash">vagrant@vagrant:/etc/nginx/sites-available$ sudo vim socketio
+</code></pre>
+<p>y dentro colocaremos la configuracion siguiente</p>
+<pre><code class="language-vim">upstream socket_nodejs_upstream {
+    server 127.0.0.1:3001;
+    keepalive 64;
+}
+
+server {
+        access_log /var/log/nginx/socketio_access.log;
+        error_log  /var/log/nginx/socketio_error.log;
+        server_name socket.localdomain.lan;
+
+  location / {
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-NginX-Proxy true;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection &quot;upgrade&quot;;
+        proxy_max_temp_file_size 0;
+        proxy_pass http://socket_nodejs_upstream/;
+        proxy_redirect off;
+        proxy_read_timeout 240s;
+      }
+}
+</code></pre>
+<p>Ahora habilitamos el virtualhost</p>
+<pre><code class="language-bash">sudo ln -s /etc/nginx/sites-available/socketio /etc/nginx/sites-enabled/socketio
+</code></pre>
+<p>Y comprobamos que no tengamos ningun error de sintaxis</p>
+<pre><code class="language-bash">vagrant@vagrant:/etc/nginx/sites-available$ sudo nginx -t
+</code></pre>
+<p>Si todo va OK, reiniciamos el servicio NGINX</p>
+<pre><code class="language-bash">vagrant@vagrant:/etc/nginx/sites-available$ sudo systemctl restart nginx
+</code></pre>
+<p>Hasta aquí hemos terminado la parte del servidor de socketio, ahora veremos como utilizarlo desde 2 lenguajes distintos, para ello necesitamos registrar nuestro dominio local en el archivo /etc/host (para mac o linux) o C:\Windows\System32\drivers\etc (para Windows), colocamos la ip interna de nuestra maquina virtual y el dominio, que en este caso es <code>socket.localdomain.lan</code>, esto lo habiamos definido en la configuracion del virtualhost de NGINX.</p>
+<p>Voy consumir lo anterior creando una pagina html y con ayuda de jquery, mostrará una barra de progreso, aprovechando que ya tengo instalado NGINX voy a colocar esta pagina en su directorio por default y llamarlo index.html.</p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;utf-8&quot;&gt;
+  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
+  &lt;title&gt;Demo&lt;/title&gt;
+  &lt;link rel=&quot;stylesheet&quot; href=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css&quot;&gt;
+  &lt;!-- Optional Theme --&gt;
+  &lt;link rel=&quot;stylesheet&quot; href=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css&quot;&gt;
+  &lt;!-- Optional IE8 Support --&gt;
+  &lt;!--[if lt IE 9]&gt;
+    &lt;script src=&quot;https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;https://oss.maxcdn.com/respond/1.4.2/respond.min.js&quot;&gt;&lt;/script&gt;
+  &lt;![endif]--&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;container&quot;&gt;
+    &lt;div class=&quot;row&quot; style=&quot;margin-top: 100px&quot;&gt;
+      &lt;div class=&quot;col-md-12&quot;&gt;
+        &lt;div class=&quot;progress&quot; id=&quot;idpgbarmessage&quot;&gt;
+          &lt;div class=&quot;progress-bar progress-bar-success&quot; role=&quot;progressbar&quot; aria-valuenow=&quot;40&quot;
+          aria-valuemin=&quot;0&quot; aria-valuemax=&quot;100&quot; style=&quot;width:40%&quot;&gt;
+          &lt;div id=&quot;idpgmessage&quot;&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+  &lt;!-- jQuery --&gt;
+  &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js&quot;&gt;&lt;/script&gt;
+  &lt;!-- Minified JavaScript --&gt;
+  &lt;script src=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js&quot;&gt;&lt;/script&gt;
+  &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js&quot;&gt;&lt;/script&gt;
+  &lt;script&gt;
+    var appurl = &quot;http://socket.localdomain.lan&quot;
+    var socket = io.connect(appurl, { 'forceNew': true });
+    $('#idpgbarmessage').hide();
+
+    socket.on('progress', function(data) {
+      if (data) {
+        var p = Math.round((parseInt(data.current) / parseInt(data.total))*100);
+        $('.progress-bar').css('width', p + '%').attr('aria-valuenow', p);  
+        $(&quot;#idpgmessage&quot;).html(data.name+&quot; (&quot;+p+&quot;%) &quot;);
+      } 
+    });
+    socket.on('bar', function(data) {
+      if (data == 'show') {
+        $('#idpgbarmessage').show();
+      }
+      if (data == 'hide') {
+        $('#idpgbarmessage').hide();
+      }
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>Ésta es una estructura basica de html5 configurado con bootstrap 3 y jquery, ademas colocamos la barra de progreso y lo identificamos con el ID <code>idpgbarmessage</code>, en la parte de javascript es donde colocamos el codigo que reaccionará al momento que detecte un flujo en los canales, recuerden que habiamos definido 2 canales, en esta variable <code>var appurl</code> estoy colocando la direccion de nuestro servidor local de socket.io. Bien hasta aqui si actualizamos la pagina no mostrará nada aun, nisiquiera la barra de progreso ya que por defecto lo oculto, y solo se mostrará si existe algo que mostrar.</p>
+<p>Ahora vamos a crear un programa en Python que funcionará como cliente y se encargará de enviar los datos que mostrará la barra de progreso.</p>
+<p>Dentro de nuestra maquina virtual vagrant vamos a instalar pip y virtualenv</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ sudo apt-get install python-pip
+vagrant@vagrant:~$ sudo pip install virtualenv
+</code></pre>
+<p>Acostumbro utilizar entornos virtuales cuando uso python, me permite aislar la instalacion de paquetes por programa, por eso creamos un entorno virtual dentro de mi carpeta de trabajo client</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ mkdir ~/client
+vagrant@vagrant:~$ cd ~/client
+vagrant@vagrant:~/client$ virtualenv venv
+vagrant@vagrant:~/client$ source venv/bin/activate
+</code></pre>
+<p>Ahora instalamos un paquete llamado <code>socketIO-client-2</code></p>
+<pre><code class="language-bash">(venv) vagrant@vagrant:~/client$ pip install socketIO-client-2
+</code></pre>
+<p>Noten que el prompt cambio al momento de activar el entorno virtual de python<br>
+Bien ahora el pequeño programa que ejecutará un ciclo para mostrar la barra  y mostrar el progreso, el programa lo llamaré app.py</p>
+<pre><code class="language-python">from socketIO_client import SocketIO
+
+socketIO = SocketIO('http://socket.localdomain.lan')
+socketIO.emit('bar', &quot;show&quot;)
+for i in range(1, 10):
+    socketIO.emit('progress', {&quot;name&quot;: &quot;Carlos&quot;, &quot;total&quot;: 10, &quot;current&quot;: i})
+    socketIO.wait(seconds=1)
+socketIO.emit('bar', &quot;hide&quot;)
+</code></pre>
+<p>Ahora vamos a probar si funciona todo, mantengan abierta la pagina html que creamos en la seccion anterior y vamos a ejecutar el presente programa</p>
+<pre><code class="language-bash">(venv) vagrant@vagrant:~/client$ python app.py
+</code></pre>
+<p>El resultado es como la imagen, donde el programa en python envia la orden de hacer visible la barra, muestra su progreso y cuando termina, se oculta<br>
+<img src="http://localhost:2368/content/images/2018/04/Screen-Shot-2018-04-30-at-11.57.49-AM.png" alt="Utilizando Socket.IO y Bootstrap progressbar"></p>
+<p>Dejanos tus comentarios y comparte este pequeño ejercicio</p>
+</div>]]></content:encoded></item><item><title><![CDATA[HANDSONTABLE, edita rapidamente tus registros]]></title><description><![CDATA[<div class="kg-card-markdown"><iframe width="560" height="315" src="https://www.youtube.com/embed/wv6EMqQdnGI" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+<p>Cuando de captura masiva de datos se refiere nos topamos con un problema que siempre ha existido, ¿como diseñar una interfaz que me permita capturar la mayor cantidad de registros en el menor tiempo posible?. Anteriormente existía una generación de capturistas muy hábiles en el uso completo de el teclado,</p></div>]]></description><link>http://localhost:2368/handsontable-edita-rapidamente-tus-registros/</link><guid isPermaLink="false">5b5788fbb701761577943d51</guid><category><![CDATA[Handsontable]]></category><category><![CDATA[PHP]]></category><category><![CDATA[codeigniter]]></category><category><![CDATA[javascript]]></category><category><![CDATA[Jquery]]></category><category><![CDATA[Ajax]]></category><dc:creator><![CDATA[carlos]]></dc:creator><pubDate>Sat, 28 Apr 2018 00:55:57 GMT</pubDate><media:content url="http://localhost:2368/content/images/2018/04/Screen-Shot-2018-04-27-at-7.54.45-PM.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><iframe width="560" height="315" src="https://www.youtube.com/embed/wv6EMqQdnGI" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+<img src="http://localhost:2368/content/images/2018/04/Screen-Shot-2018-04-27-at-7.54.45-PM.png" alt="HANDSONTABLE, edita rapidamente tus registros"><p>Cuando de captura masiva de datos se refiere nos topamos con un problema que siempre ha existido, ¿como diseñar una interfaz que me permita capturar la mayor cantidad de registros en el menor tiempo posible?. Anteriormente existía una generación de capturistas muy hábiles en el uso completo de el teclado, claro ellos vienen quizás de las escuelas técnicas donde te enseñaban el oficio de secretariado con aquellas enormes maquinas de escribir Olivetti, para ellos no fué dificil pasarse al teclado de una computadora, todo es igual solo que mas suave, lo digo on certeza porque yo pertenezco a esa generación.<br>
+Pero seguimos con el mismo problema, como aprovechar todas las habilidades y la rapidez de esos expertos en la mecanografía con una interfaz donde se abusa demasiado del entorno grafico. Hace algunos años las interfaces de usuario se diseñaban en modo texto, los lenguajes como Clipper, dBase, FoxPro trabajaban a la perfeccion, pero con la llegada de el entorno grafico dificilmente podemos encontrar una interfaz capaz de cubrir con esas espectativas y ahora que los sistemas son web, se complica aun mas y es aqui donde entra esta libreria.<br>
+Handsontable, lo que nos brinda esta libreria es la posibilidad de crear una tabla editable tipo hoja de calculo con algunas funciones basicas de calculo, filtros, formatos, etc. en entornos graficos, una hoja de calculo es la forma mas rapida de capturar masivamente datos.<br>
+Handsontable tiene esta disponible para los frameworks de javascript mas populares, en nuestro ejemplo utilizaremos jquery, ajax y php.</p>
+<p>Comenzaremos del lado del servidor, vamos a ejecutar una consulta donde voy a obtener con la ayuda de codeigniter un dataset que me servirá para armar un arreglo tal y como lo require esta libreria para retornarlo a travez de JSON</p>
+<pre><code class="language-php">  function getSelectedShipments()
+  {
+    $r = $this-&gt;trackandtrace_model-&gt;editShipments($this-&gt;input-&gt;post('ttid'));
+    $a = array();
+
+    foreach ($r-&gt;result() as $key ) {
+      $tmp = array();
+      $tmp[] = $key-&gt;trackandtraceid;
+      $tmp[] = $key-&gt;hawb;
+      $tmp[] = $key-&gt;hawb_date;
+      $tmp[] = $key-&gt;duedate;
+      $tmp[] = $key-&gt;category;
+      $tmp[] = NULL;
+      $tmp[] = $key-&gt;carrier_status;
+      $tmp[] = $key-&gt;estimated_date;
+      $tmp[] = $key-&gt;delivery_agent;
+      $tmp[] = $key-&gt;pu_agent;
+      $tmp[] = $key-&gt;xfer_agent;
+      $tmp[] = $key-&gt;assignedto;
+      $tmp[] = $key-&gt;seko_status;
+      $tmp[] = $key-&gt;pod_date;
+      $tmp[] = $key-&gt;appt_date;
+
+      $a[] = $tmp;
+    }
+    echo json_encode($a);
+
+  }
+</code></pre>
+<p>Noten que el orden en que son colocados los campos tiene que ser el mismo configurado en el lado del cliente con jQuery.</p>
+<p>Vamos a consumir lo anterior del lado del cliente con html y javascript.<br>
+En nuestra pagina voy a mostrar la hoja de calculo en un Modal de bootstrap, en modal-body colocamos el DIV donde se mostrará la tabla de handsontable identificado con el ID &quot;idspreadsheedtable&quot;</p>
+<pre><code class="language-html">....
+&lt;div class=&quot;modal-body&quot;&gt;
+    &lt;div class=&quot;row&quot;&gt;
+      &lt;div class=&quot;col-md-12&quot;&gt;
+          &lt;div id=&quot;idspreadsheedtable&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+....
+</code></pre>
+<p>En la seccion de javascript declaramos una variable global para la libreria, ademas de disparar en el evento cuando se muestra el modal, debemos de renderizar nuestra tabla y cuando se oculta el modal, lo destruimos.</p>
+<pre><code class="language-javascript">var hot;
+
+$(function(){
+    $('#modaledit').on('shown.bs.modal', function (e) {
+        hot.render();
+    });
+    $('#modaledit').on('hide.bs.modal', function (e) {
+        hot.destroy();
+    });
+});
+</code></pre>
+<p>Ahora creamos una funcion que se encargará de cargar la informacion que viene del lado del servidor en formato JSON, dibujar nuestra hoja de calculo y finalmente mostrar el modal. En esta funcion usamos AJAX para enviar por el metodo POST la relacion de ID's que deseamos y nos devolverá un JSON que ya armamos en PHP.</p>
+<pre><code class="language-javascript">function loadData(){
+    request = $.ajax({
+      url:&quot;trackandtrace/getSelectedShipments&quot;,
+      cache: false,
+      dataType : 'json',
+      type: &quot;post&quot;,
+      data: {ttid: hawbid},
+    });
+    
+   request.done(function(response){
+    var container = document.getElementById('idspreadsheedtable');
+    hot = new Handsontable(container, {
+        data: response,
+        colHeaders: ['ID','HAWB','HAWB_date','Due date','Category','Notes','Carrier status','Estimate arrival',
+        'Delivery agent','PU agent','Transfer agent','Assigned to','SEKO status','POD date','Appt date'
+        ],
+        columns: [
+          {
+            data: 0,
+            readOnly: true
+          },
+          {
+            data: 1,
+            readOnly: true
+          },
+          {
+            data: 2,
+            readOnly: true,
+          },
+          {
+            data: 3,
+            readOnly: true
+          },
+          {
+            data: 4,
+            readOnly: true
+          },
+          {
+            data: 5,
+          },
+          {
+            data: 6,
+          },
+          {
+            data: 7,
+            type: 'date',
+            dateFormat: 'MM-DD-YYYY',
+            correctFormat: true,
+            defaultDate: '01-01-2018',
+            datePickerConfig: {
+              firstDay: 0,
+              showWeekNumber: true,
+              numberOfMonths: 1,
+              disableDayFn: function(date) {
+                return date.getDay() === 0 || date.getDay() === 6;
+              }
+            }
+          },
+          {
+            data: 8,
+            readOnly: true
+          },
+          {
+            data: 9,
+            readOnly: true
+          },
+          {
+            data: 10,
+            readOnly: true
+          },
+          {
+            data: 11,
+            readOnly: true
+          },
+          {
+            data: 12,
+            readOnly: true
+          },
+          {
+            data: 13,
+            readOnly: true
+          },
+          {
+            data: 14,
+            readOnly: true
+          },
+          
+        ],
+        stretchH: 'all',
+        renderAllRows: true,
+        height: 320,
+      });
+    $(&quot;#modaledit&quot;).modal('show');
+  });
+}
+</code></pre>
+<p>Pasamos la respuesta del json se lo pasamos a <code>data: response</code>, definimos los encabezados de nuestra hoja de calculo y tambien definimos las columnas, algunas serán de solo lectura. Por ultimo hacemos visible nuestro modal y listo, tenemos una hoja de calculo con las columnas 5 y 6 disponibles para editar.</p>
+<p>Ahora la parte final, vamos a tomas los valores introducidos y guardarlos en la base de datos. El el boton de nuestro modal &quot;Guardar Cambios&quot;, colocamos una clase <code>.savechanges</code> que al hacer click se dispara el siguiente evento</p>
+<pre><code class="language-javascript">$(document).on('click', '.savechanges', function(event) {
+    event.preventDefault();
+    var req = hot.getData();
+    request = $.ajax({
+      url: &quot;trackandtrace/saveSelectedShipments&quot;,
+      cache: false,
+      dataType : 'json',
+      type: &quot;post&quot;,
+      data: {data: req},
+    });
+    request.fail(function(jqXHR, textStatus, errorThrown){
+      swal({
+           title: textStatus,
+           text: errorThrown,
+           type: &quot;error&quot;,
+           html: true
+         });
+    });
+    request.done(function(r){
+      $(&quot;#modaledit&quot;).modal('hide');
+    });
+  });
+</code></pre>
+<p>De el lado del servidor, vamos a recibir un arreglo con el que actualizaremos nuestra base de datos.</p>
+<pre><code class="language-php">  function saveSelectedShipments()
+  {
+     $response = $this-&gt;input-&gt;post('data');
+    foreach ($response as $key =&gt; $value) {
+      $data = array();
+      $id = $value[0]; 
+      $hawb = $value[1]; 
+      $notes = $value[5]; 
+      $carrierstatus = $value[6]; 
+      $carrierdate = $value[7]; 
+      $dataupd = array(); $error = '';
+      if (!empty(trim($carrierstatus)))
+        $dataupd['carrier_status'] = $carrierstatus;
+      if (!empty(trim($carrierdate)))
+        $dataupd['estimated_date'] = $carrierdate;
+      if (!empty($dataupd))
+        $error = $this-&gt;trackandtrace_model-&gt;updateTrackAndTraceByID($id, $dataupd);
+      if (!empty($error)) {
+        return $this-&gt;output
+                -&gt;set_content_type('application/json')
+                -&gt;set_status_header(400)
+                -&gt;set_output(json_encode($error));
+      }
+      if ( !empty(trim($notes)) )
+        $res = $this-&gt;trackandtrace_model-&gt;saveNotes($hawb, $notes);
+      
+    }
+    return $this-&gt;output
+        -&gt;set_content_type('application/json')
+        -&gt;set_status_header(200)
+        -&gt;set_output(json_encode(&quot;&quot;));
+  }
+</code></pre>
+<p>Si existe algun error, codeigniter me retorna el mensaje de error y se lo devuelvo a AJAX para ser mostrado del lado del cliente, caso contrario se almacena la informacion y retorna un codigo 200.</p>
+<p>Este tutorial muestra partes aisladas de codigos para ejemplificar el ciclo completo de la libreria, en un futuro veremos con mayor detalle la utilizacion de ésta y mas librerias de javascript con php, jquery, bootstrap en el CURSO COMPLETO DE DESARROLLO WEB CON PHP. Siguenos en nuestras redes sociales para recibir notificaciones sobre este material.</p>
+<p>Dejanos tus comentarios, con gusto resolveré las dudas que se les presenten.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[Crea un servicio que avise por correo cuando otro servicio crítico falle]]></title><description><![CDATA[<div class="kg-card-markdown"><p>Systemd provee un proceso estandard para controlar que programas son ejecutados cuando inicia un sistema operativo como Linux. Systemd fué creado por Lennart Poettering y Kay Sievers e introducido por RedHat como un estandard que pretende reemplazar los viejos scripts de arranque y parada de servicios. Hoy en dia es</p></div>]]></description><link>http://localhost:2368/configurar-systemd-para-enviar-correo-en-caso-de-falla/</link><guid isPermaLink="false">5b5788fbb701761577943d3c</guid><category><![CDATA[Linux]]></category><category><![CDATA[SysAdmin]]></category><category><![CDATA[Systemd]]></category><dc:creator><![CDATA[carlos]]></dc:creator><pubDate>Wed, 07 Feb 2018 17:15:33 GMT</pubDate><media:content url="http://localhost:2368/content/images/2018/02/Untitled-design--2-.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://localhost:2368/content/images/2018/02/Untitled-design--2-.png" alt="Crea un servicio que avise por correo cuando otro servicio crítico falle"><p>Systemd provee un proceso estandard para controlar que programas son ejecutados cuando inicia un sistema operativo como Linux. Systemd fué creado por Lennart Poettering y Kay Sievers e introducido por RedHat como un estandard que pretende reemplazar los viejos scripts de arranque y parada de servicios. Hoy en dia es utilizado para administrar procesos tan importantes como el journal, el stack de red, job scheduler, login de usarios y muchos otros mas.</p>
+<p>Crear nuestros propios servicios es una tarea sencilla, si lo que pretendemos es ejecutar un programa echo en Python, PHP o en cualquier otro lenguaje, solo bastará con crear un script en /etc/systemd/system</p>
+<p><strong>myproject.service</strong></p>
+<pre><code class="language-bash">[Unit]
+Description=uWSGI instance to serve myproject
+After=network.target
+[Service]
+User=user
+Group=www-data
+WorkingDirectory=/home/user/myproject
+Environment=”PATH=/home/user/myproject/myprojectenv/bin”
+ExecStart=/home/user/myproject/myprojectenv/bin/uwsgi — ini myproject.ini
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+<p>Este es un ejemplo de un servicio que levanta una aplicacion hecha en Python y Flask, pero que sucede si este programa por alguna razón falla, bueno siempre tenemos la opcion de colocar en la sección [Service] la siguiente directiva</p>
+<pre><code class="language-bash">[service]
+Restart=always
+RestartSec=3
+</code></pre>
+<p>La cual se encargará de reiniciar el servicio automaticamente en caso de alguna falla en el programa, pero esto no resuelve el problema, necesitamos saber el porqué nuestro programa falla en ocasiones, siempre contamos con la opcion de buscar en el log que sucedió, pero ademas podemos indicarle al servicio que nos avise cuando esto pase y nos envíe los mensajes de error que arrojó la falla.</p>
+<p>Como prerequisito necesitamos configurar en este servidor el servicio de envio de correo electronico desde consola, prueba si eso es posible.</p>
+<pre><code class="language-bash">[root@tecadmin ~]# mail -s &quot;Test Subject&quot; user@example.com &lt; /dev/null
+</code></pre>
+<p>con Sendmail</p>
+<pre><code class="language-bash">[root@tecadmin ~]# sendmail user@example.com  &lt; /tmp/email.txt
+</code></pre>
+<p>Comenzamos creando un script para enviar correo electronico <strong>/bin/unit-status-mail.sh</strong></p>
+<pre><code class="language-bash">#!/bin/bash
+MAILTO=&quot;administradorsysadmin@gmail.com&quot;
+MAILFROM=&quot;unit-status-mailer&quot;
+UNIT=$1
+EXTRA=&quot;&quot;
+for e in &quot;${@:2}&quot;; do
+  EXTRA+=&quot;$e&quot;$'\n'
+done
+UNITSTATUS=$(systemctl status $UNIT)
+sendmail $MAILTO &lt;&lt;EOF
+From:$MAILFROM
+To:$MAILTO
+Subject:Status mail for unit: $UNIT
+Status report for unit: $UNIT
+$EXTRA
+$UNITSTATUS
+EOF
+echo -e &quot;Status mail sent to: $MAILTO for unit: $UNIT&quot;
+</code></pre>
+<p>Importante asignarle derechos de ejecucion <strong>chmod +x /bin/unit-status-mail.sh</strong></p>
+<p>Ahora crearemos un servicio llamado <strong>unit-status-mail@.service</strong> que va a consumir el script anterior</p>
+<pre><code class="language-bash">[Unit]
+Description=Unit Status Mailer Service
+After=network.target
+[Service]
+Type=simple
+ExecStart=/bin/unit-status-mail.sh %I &quot;Hostname: %H&quot; &quot;Machine ID: %m&quot; &quot;Boot ID: %b&quot;
+</code></pre>
+<p>y finalmente en el script del servicio que queremos monitorear, colocarmos en la seccion de <strong>[Unit]</strong></p>
+<p><strong>myproject.service</strong></p>
+<pre><code class="language-bash">OnFailure=unit-status-mail@%n.service
+</code></pre>
+<p>Actualizamos los cambios</p>
+<pre><code class="language-bash">sudo systemctl daemon-reload
+</code></pre>
+<p>y reinciamos el servicio que vamos a monitorear, en este ejemplo es <strong>myproject.service</strong></p>
+<pre><code class="language-bash">sudo systemctl restart my-upmyproject
+</code></pre>
+<p>Este es un ejemplo del correo que nos llegará cuando ocurra algun error, en este caso es un servicio del servidor de MongoDB</p>
+<p><img src="http://localhost:2368/content/images/2018/02/Screen-Shot-2018-02-07-at-10.31.56-AM.png" alt="Crea un servicio que avise por correo cuando otro servicio crítico falle"></p>
+</div>]]></content:encoded></item><item><title><![CDATA[Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox]]></title><description><![CDATA[<div class="kg-card-markdown"><p>Para el desarrollo web con PHP, existen diferentes opciones para comenzar a aprender o desarrollar aplicaciones profesionales con este lenguaje.</p>
+<p>Para ello existen varias alternativas llamados AMP (Apache, MySQL/MariaDB, Perl/PHP/Python), se clasifican en LAMPs (para Linux), WAMPs (para Windows), MAMPs (para macOS). Esta es la lista de</p></div>]]></description><link>http://localhost:2368/servidor-de-desarrollo-lemp-con-la-ayuda-de-easyengine-vagrant-y-virtualbox/</link><guid isPermaLink="false">5b5788fbb701761577943d4f</guid><category><![CDATA[Linux]]></category><category><![CDATA[PHP]]></category><category><![CDATA[codeigniter]]></category><category><![CDATA[Vagrant]]></category><category><![CDATA[EasyEngine]]></category><dc:creator><![CDATA[carlos]]></dc:creator><pubDate>Sat, 06 Jan 2018 18:20:31 GMT</pubDate><media:content url="http://localhost:2368/content/images/2018/01/---2-.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://localhost:2368/content/images/2018/01/---2-.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"><p>Para el desarrollo web con PHP, existen diferentes opciones para comenzar a aprender o desarrollar aplicaciones profesionales con este lenguaje.</p>
+<p>Para ello existen varias alternativas llamados AMP (Apache, MySQL/MariaDB, Perl/PHP/Python), se clasifican en LAMPs (para Linux), WAMPs (para Windows), MAMPs (para macOS). Esta es la lista de soluciones para las plataformas mas comunes</p>
+<table>
+    <thead>
+        <tr>
+            <th>Paquete</th>
+            <th>Plataforma</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>AMPPS</td>
+            <td>Windows, macOS, Linux, BSD</td>
+        </tr>
+        <tr>
+            <td>Bitnami LAMP Stack</td>
+            <td>Linux</td>
+        </tr>
+        <tr>
+            <td>Bitnami MAMP Stack</td>
+            <td>macOS</td>
+        </tr>
+        <tr>
+            <td>Bitnami WAMP Stack</td>
+            <td>Windows</td>
+        </tr>
+        <tr>
+            <td>DAMP</td>
+            <td>macOS</td>
+        </tr>
+        <tr>
+            <td>LAMP</td>
+            <td>Linux</td>
+        </tr>
+        <tr>
+            <td>MAMP</td>
+            <td>Windows, macOS</td>
+        </tr>
+        <tr>
+            <td>XAMPP</td>
+            <td>Windows, Linux, macOS</td>
+        </tr>
+        <tr>
+            <td>Wamp.NET</td>
+            <td>Windows</td>
+        </tr>
+        <tr>
+            <td>WampServer</td>
+            <td>Windows</td>
+        </tr>
+        <tr>
+            <td>Zend Server Community Edition</td>
+            <td>Windows, macOS, Linux, IBMI</td>
+        </tr>
+    </tbody>
+</table>
+<br>
+Existen muchos mas y seguirán surgiendo aun mas. Lo que vamos a realizar en este tutorial es olvidarnos de esa lista y crear nuestro propio ambiente de desarrollo listo para produccion y sin tener que comprometer el sistema operativo base de nuestra computadora.
+<br><p>
+</p><h3 id="1descargaeinstalaciondevagrantyvirtualbox">1.- Descarga e Instalacion de Vagrant y Virtualbox</h3>
+<p>Comencemos instalando los dos programas requeridos, <a href="https://www.virtualbox.org/wiki/Downloads">VirtualBox</a> y <a href="https://www.vagrantup.com/downloads.html">Vagrant</a> e instalarlos, no importa el orden. Si ya los tienes instalados, asegurate que se encuentren actualizados en la ultima version.</p>
+<p>Una vez instalados, reinicia tu computadora para que reconozca los comandos, todo lo haremos desde linea de comando o consola.</p>
+<h3 id="2buscamosladistribucinlinuxbase">2.- Buscamos la distribución Linux base</h3>
+<p>Elegimos Linux, precisamente por que estamos preparando todo para producción. Existe un <a href="https://app.vagrantup.com/boxes/search">repositorio</a> en el sitio de vagrant donde la comunidad constantemente sube distribuciones linux de todo tipo, es <a href="https://app.vagrantup.com/boxes/search">aqui</a> donde buscaremos nuestra configuracion favorita, para este ejemplo vamos a buscar <a href="https://app.vagrantup.com/boxes/search">Ubuntu 16 LTS de 64 bits</a>.<br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-12.26.24-PM.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"><br>
+Selecciona como Provider a VirtualBox y busca Ubuntu 16 como se muestra en la imagen, puedes elegir el que gustes, la cantidad de descarga te puede dar una idea de cuales son las mas populares, nosotros elegiremos <strong>gbarbieru/xenial</strong>, solo copiamos el nombre</p>
+<h3 id="3creaciondearchivovagrantfileyconfiguracion">3.- Creacion de archivo Vagrantfile y configuracion</h3>
+<p>Desde nuestra maquina principal, en la consola o ventana MS-DOS nos dirigimos a una carpeta de trabajo y dentro tecleamos</p>
+<pre><code class="language-bash">$ vagrant init gbarbieru/xenial
+</code></pre>
+<p>Esta acción nos generará un único archivo llamado <strong>Vagrantfile</strong>, abre el archivo con tu editor de textos favorito y vamos a modificar un par de lineas, la mayoria se encuentra comentada.<br>
+Busca la seccion <strong>config.vm.network</strong> y <strong>config.vm.syncedfolder</strong>, quitamos el comentario y en el primer caso, vamos a colocar una direccion IP, esta direccion NO debe de ser igual al de tu red interna, puede ser cualquier otro, si no estas seguro deja la que aparece por defecto, en mi caso voy a dejarla de la siguiente forma</p>
+<pre><code class="language-markup">config.vm.network &quot;private_network&quot;, ip: &quot;192.168.99.10&quot;
+</code></pre>
+<p>En la seccion de <strong>syncedfolder</strong> voy a indicarle la carpeta comun que compartirá mi maquina host y la maquina virtual Linux, los archivos que coloque en ésta carpeta se verán en ambos ambientes. Es aqui donde colocamos nuestro condigo fuente de nuestra aplicacion, para poder editarla desde mi equipo principal y ejecutarla desde la maquina virtual Linux, voy a dejarla de la siguiente forma</p>
+<pre><code class="language-markup">config.vm.synced_folder &quot;./public_html&quot;, &quot;/vagrant_html&quot;
+</code></pre>
+<blockquote>
+<p><strong>Importante</strong>: debes crear la carpeta que vas a compartir entre los dos ambientes antes de levantar la maquina virtual</p>
+</blockquote>
+<p>Desde nuestra maquina principal, voy a crear en esta ubicacion mi carpeta compartida</p>
+<pre><code class="language-bash">$ mkdir public_html
+</code></pre>
+<h3 id="4arrancamosnuestramaquinavirtual">4.- Arrancamos nuestra maquina virtual</h3>
+<p>Ya tenemos listo nuestro archivo de configuracion de Vagrant y nuestra carpeta compartida para Virtualbox, ahora iniciaremos la maquina virtual, seguimos desde linea de comando.</p>
+<pre><code class="language-bash">$ vagrant up
+</code></pre>
+<p>Esta operacion iniciará la maquina virtual, por ser la primera vez que utilizamos esta imagen, la va a descargar del repositorio de vagrant, quizá demore un poco, esto dependerá de tu velocidad de internet. Una vez descargada podrás utilizarla con mas configuraciones y el proceso será mas rapido, si decides cambiar de distribucion Linux, igual la descargará solo la primera vez.<br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-12.55.50-PM.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"></p>
+<h3 id="5instalacindeeasyengineycreaciondenuestroprimersitioweb">5.- Instalación de EasyEngine y creacion de nuestro primer sitio web</h3>
+<p>Si todo salió bien, veremos la siguiente imagen<br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-12.58.58-PM.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"><br>
+Ahora ya estamos listos para la instalacion del paquete EasyEngine. Esta utileria funciona en distribuciones basadas en Debian, y nos ayudará a crear nuestro sitio web facil y rapido.<br>
+Entramos a nuestro ambiente Linux con el comando</p>
+<pre><code class="language-bash">$ vagrant ssh
+</code></pre>
+<p>así de sencillo, no necesitamos instalar ninguna otra aplicacion y tampoco necesitamos de configuraciones complejas, solo basta con estar ubicado en la carpeta de trabajo desde la linea de comandos. ¿Como sabemos que estamos en Linux?, cuando veamos el prompt <strong>vagrant@vagrant:~$</strong><br>
+La primera vez haremos una actualizacion de nuestro Linux. Desde nuestra maquina virtual tecleamos,</p>
+<pre><code class="language-bash">$ sudo apt update
+$ sudo apt upgrade
+</code></pre>
+<p>Si les sale esta pantalla<br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-1.08.26-PM.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"><br>
+preguntando por la instalacion de GRUB, elijan la primera opcion y opriman la barra espaciadora para marcarla y luego enter.<br>
+Es posible que salgan mas confirmaciones, lean de que se trata y si no estan seguros, solo opriman enter.<br>
+Ya terminamos de instalar nuestro SO Linux, ahora tecleamos</p>
+<pre><code class="language-bash">$ wget -qO ee rt.cx/ee &amp;&amp; sudo bash ee
+</code></pre>
+<p>Esta operacion instalará el paquete EasyEngine y solo lo haremos una vez. En alguna parte de la instalación preguntará por tu nombre y correo electronico, proporciona un correo válido, ahi te llegarán los avisos de actualizaciones.<br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-1.14.55-PM.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"><br>
+Una vez terminado ahora si vamos a crer nuestro sitio web, con esta utileria podemos crear hasta 14 tipos diferentes de sitios web incluido Wordpress.<br>
+Lo que nos ocupa el dia de hoy es nuestro ambiente LEMP y lo creamos</p>
+<pre><code class="language-bash">$ sudo ee site create mipagina.com --mysql --php7
+</code></pre>
+<p>Con esta instruccion vamos a crear un sitio web llamado &quot;mipagina.com&quot; con soporte para PHP, base de datos MySQL y servidor Web NGINX.<br>
+Despues de esperar a que descargara todo lo necesario, llegamos a esta imagen<br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-1.25.38-PM-1.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"><br>
+Tomen nota de lo marcado, ese usuario y contraseña lo utilizaremos mas adelante<br>
+Ya tenemos creado nuestro sitio web y podemos verlo en la URL <a href="http://mipagina.com">http://mipagina.com</a>, pero para que esto sea posible vamos a editar un archivo en nuestra maquina principal, dejamos la virtual por un momento y buscamos en nuestro equipo el archivo <strong>host</strong></p>
+<ul>
+<li>Linux o Mac se encuentra en /etc/host</li>
+<li>Windows se encuentra en c:\Windows\System32\drivers\etc\</li>
+</ul>
+<p>Desde nuestra maquina principal, editamos el archivo con permisos de administrador y agregamos la siguiente linea</p>
+<pre><code class="language-markup">192.168.99.10  mipagina.com
+</code></pre>
+<p>La ip de nuestra maquina virtual, la que se definió al principio del tutorial, y el dominio ficticio de nuestro sitio web, de esta forma la computadora resolverá ese nombre localmente cuando la solicitemos desde un navegador.<br>
+Guardamos cambios y hacemos pruebas.<br>
+Desde el navegador entramos al direccion <a href="http://mipagina.com">http://mipagina.com</a><br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-1.36.14-PM.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"><br>
+Si ven esta imagen, quiere decir que estamos bien, no te preocupes del mensaje por el momento.</p>
+<h3 id="6configuraciondelsitiowebalacarpetacompartida">6.- Configuracion del sitio web a la carpeta compartida</h3>
+<p>En este paso vamos a editar un poco los archivos de configuracion de NGIX, para que apunte a la carpeta de nuestro codigo fuente, por defecto los directorios de sitios web los aloja en /var/www, vamos a modificar esa ruta.<br>
+Primero que nada, dentro de mi carpeta compartida public_html.<br>
+Desde nuestra maquina principal, voy a crear otra carpeta llamada <strong>mipagina_com</strong><br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-1.42.24-PM.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"><br>
+Mi intencion es la de crear varios sitios web y cada una con su propia carpeta dentro de public_html</p>
+<p>Desde la maquina virtual tecleamos</p>
+<pre><code class="language-bash">$ sudo vim /etc/nginx/sites-enabled/mipagina.com 
+</code></pre>
+<p>busquen la seccion <code>root /var/www/mipagina.com/htdocs;</code> y cambienla por <code>root /vagrant_html/mipagina_com;</code> guardamos en vim con <code>:wq</code>, si no estas acostumbrado a usar VIM, puedes usar nano o cualquier otro editor de textos para consolo en Linux.<br>
+Comprobamos si no hay errores en el archivo de configuracion y reiniciamos el servicio de NGINX</p>
+<pre><code class="language-bash">$ sudo nginx -t
+$ sudo systemctl restart nginx
+</code></pre>
+<p>Desde nuestra maquina principal, vamos a nuestra carpeta <strong>mipagina_com</strong> y dentro vamos a crear un archivo de prueba index.html para comprobar si realmente esta apuntando a nuestra carpeta compartida<br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-1.51.13-PM.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox">,<br>
+en mi caso solo puse dentro del archivo index.html Hola Mundo y recargamos la pagina para ver el resultado</p>
+<h3 id="7configurandobasededatosmysql">7.- Configurando base de datos MySQL</h3>
+<p>Hasta aqui ya tenemos nuestro sitio web funcionando, puedes colocar en tu carpeta compartida tu codigo fuente y NGINX lo interpretará, cualquier cambio que realices desde tu equipo principal se verá reflejado inmediatamente.<br>
+Vamos con la parte de base de datos, al crear el sitio, le indicamos que queriamos una base de datos MySQL, pero ¿donde esta ubicado mi base de datos y como accedo a ella?.<br>
+Desde nuestra maquina virtual, nos dirigimos a la carpeta <code>/var/www/mipagina.com</code><br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-2.02.53-PM.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"><br>
+observen el contenido del archivo <code>ee-config.php</code> tecleando</p>
+<pre><code class="language-bash">$ cat ee-config.php
+</code></pre>
+<p>y tomen nota del contenido, ahi viene el usuario, base de datos y contraseña que creo para nuestro sitio mipagina.com, con esta informacion podemos conectarnos a la base de datos desde linea de comandos tecleando</p>
+<pre><code class="language-bash">$ mysql -u mipagina_com -pZu5QcM7w6WEkO41 mipagina_com
+</code></pre>
+<p><em>coloquen la informacion de su archivo, puede ser diferente la contraseña.</em></p>
+<p>Pero no queremos usar linea de comando para administrar nuestra base de datos, entonces procederemos a instalar phpmyadmin</p>
+<pre><code class="language-bash">$ sudo apt install composer -y
+$ sudo ee stack install --phpmyadmin
+$ cd /var/www/22222/htdocs/db/pma/
+$ composer install --no-dev
+</code></pre>
+<p>Basicamente lo que hicimos fue instalar composer, despues el stack de phpmyadmin y para poder instalar las dependencias nos cambiamos al directorio de instalacion e instalamos el resto con composer</p>
+<p>Una vez terminado, vamos a entrar a phpmyadmin a traves del sitio de administracion de EasyEngine, se acuerdan del usuario y contraseña que les pedí que tomaran nota en el paso 5, es ahora cuando lo utilizaremos.<br>
+Desde nuestra maquina principal, entramos en cualquier navegador web y vamos a la url <a href="https://192.168.99.10:22222/">https://192.168.99.10:22222/</a>, es un sitio https no certificado, el navegador pedira agregar una excepcion.<br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-2.16.07-PM.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"></p>
+<p>El contenido serán unos enlaces a directorios <code>db, fpm, php</code>, damos click en <code>db</code> y luego en <code>pma</code> y ya estaremos en phpmyadmin, ahora vamos a utilizar el usuario y contraseña que recuperamos del archivo <strong>ee-config.php</strong> del paso 7<br>
+el resultado es esta pantalla<br>
+<img src="http://localhost:2368/content/images/2018/01/Screen-Shot-2018-01-06-at-2.20.16-PM.png" alt="Servidor de desarrollo LEMP con la ayuda de EasyEngine, Vagrant y Virtualbox"></p>
+<p>Ya tenemos listo nuestro sitio web y tambien a la base de datos MySQL, si deseas agregar otro sitio, en resumen éstos serian los pasos:</p>
+<ol>
+<li>Desde la maquina virtual teclear <code>$ sudo ee site create miotrapagina.com --mysql --php7</code></li>
+<li>Desde nuestra maquina principal, creas una carpeta dentro de public_html para alojar tu codigo fuente</li>
+<li>Desde nuestra maquina principal, agregamos en el archivo <code>host</code> la linea <code>192.168.99.10 miotrapagina.com</code></li>
+<li>Desde la maquina virtual, editamos el archivo de configuracion de Nginx <code>$ sudo vim /etc/nginx/sites-enabled/miotrapagina.com</code>, cambiamos la ruta y reinciamos servicio <code>$ sudo nginx -t</code> y si no hay error <code>$ sudo systemctl restart nginx</code></li>
+<li>Explorar el contenido del archivo <code>ee-config.php</code> para obtener la base de datos, usuario y contraseña para este sitio.</li>
+</ol>
+<p>Puedes tener en el mismo ambiente de desarrollo todos los sitios que desees con la misma direccion IP, solo hay que elegir un dominio ficticio diferente, incluso sitios de Wordpress.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[Carga masiva de información de Excel a base de datos Parte 1/3]]></title><description><![CDATA[<div class="kg-card-markdown"><p>Carga tu informacion sin importar el tamaño de tu archivo de Excel ni el formato en que se encuentren, con la ayuda de PHP, PostgreSQL y comandos de Linux.</p>
+<p>Esta es una tarea que los desarrolladores o el DBA estan acostumbrados a hacer de forma manual, pero en ocasiones se</p></div>]]></description><link>http://localhost:2368/carga-masiva-de-informacion-de-excel-a-base-de-datos/</link><guid isPermaLink="false">5b5788fbb701761577943d41</guid><category><![CDATA[Linux]]></category><category><![CDATA[codeigniter]]></category><category><![CDATA[PHP]]></category><category><![CDATA[Dropzone js]]></category><category><![CDATA[PostgreSQL]]></category><dc:creator><![CDATA[carlos]]></dc:creator><pubDate>Mon, 20 Nov 2017 16:39:27 GMT</pubDate><media:content url="http://localhost:2368/content/images/2017/11/---1-.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://localhost:2368/content/images/2017/11/---1-.png" alt="Carga masiva de información de Excel a base de datos Parte 1/3"><p>Carga tu informacion sin importar el tamaño de tu archivo de Excel ni el formato en que se encuentren, con la ayuda de PHP, PostgreSQL y comandos de Linux.</p>
+<p>Esta es una tarea que los desarrolladores o el DBA estan acostumbrados a hacer de forma manual, pero en ocasiones se convierte en algo frecuente y es cuando debes de pensar en desarrollar una herramienta que te permita la carga del archivo sin importar el tamaño, ni la forma en que se encuentra organizada la informacion. Como buenos desarrolladores que somos, tendremos que implementar una solucion que sirva de forma generica.</p>
+<p>Para evitar saturarlos en una sola publicacion, lo he dividido en 3 partes</p>
+<ol>
+<li>Diseño de Interface, Valiacion y carga de archivos y Conversión de archivos</li>
+<li>Validacion de cabecera y preparacion de la base de datos.</li>
+<li>Validacion de informacion y actualizacion o insercion a nuestras tablas</li>
+</ol>
+<h2 id="diseodeinterface">Diseño de interface</h2>
+<p>Para la interfaz del usuario usaremos Dropzone js, una libreria muy util para la carga asincrona de archivos al servidor.<br>
+<img src="http://localhost:2368/content/images/2017/11/Screen-Shot-2017-11-20-at-10.30.28-AM.png" alt="Carga masiva de información de Excel a base de datos Parte 1/3"></p>
+<h2 id="validacinycargadelarchivo">Validación y carga del archivo</h2>
+<p>Del lado del servidor colocamos validaciones y atraparemos cualquier error que arroje la carga de los archivos</p>
+<pre><code class="language-php">function uploadfile()
+	{
+		$displayMaxSize = ini_get('post_max_size');
+		switch(substr($displayMaxSize,-1))
+		  {
+		    case 'G':
+		      $displayMaxSize = $displayMaxSize * 1024;
+		    case 'M':
+		      $displayMaxSize = $displayMaxSize * 1024;
+		    case 'K':
+		       $displayMaxSize = $displayMaxSize * 1024;
+		  }
+		  $postsize = $_SERVER['CONTENT_LENGTH'];
+		if ( intval($postsize) &gt; intval($displayMaxSize) ){
+			$a = array( &quot;error&quot;=&gt; &quot;The uploaded file exceeds the post_max_size &quot;. ini_get('post_max_size')  .&quot; directive in php.ini&quot; );
+		    $code = 500;
+		    return $this-&gt;output
+	        -&gt;set_content_type('application/json')
+	        -&gt;set_status_header($code)
+	        -&gt;set_output(json_encode($a));
+		}
+		
+		$phpFileUploadErrors = array(
+		    0 =&gt; 'There is no error, the file uploaded with success',
+		    1 =&gt; 'The uploaded file exceeds the upload_max_filesize directive in php.ini is ('. ini_get('upload_max_filesize').')',
+		    2 =&gt; 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
+		    3 =&gt; 'The uploaded file was only partially uploaded',
+		    4 =&gt; 'No file was uploaded',
+		    6 =&gt; 'Missing a temporary folder',
+		    7 =&gt; 'Failed to write file to disk.',
+		    8 =&gt; 'A PHP extension stopped the file upload.',
+				);
+		if (!empty($_FILES)) {
+			$errn = intval( $_FILES['file']['error'] );
+			if ( $errn === 0 ) {
+				$tempFile = $_FILES['file']['tmp_name'];
+		        $fileName = $_FILES['file']['name'];
+		        $typef = $_FILES['file']['type'];
+		        $ext = '.'. pathinfo($fileName, PATHINFO_EXTENSION);
+		        $date = new DateTime();
+		        $file = pathinfo($_FILES['file']['name'],PATHINFO_FILENAME);
+		        $file = preg_replace(&quot;/[^a-zA-Z0-9]+/&quot;, &quot;_&quot;, $file);
+		        $newFileName = $file .'_'. $date-&gt;getTimestamp() . $ext;
+		        $targetPath = UPLOADREMOTEDIRECTORY;
+		        $targetFile = $targetPath . $newFileName ;
+		        if (is_dir($targetPath) &amp;&amp; is_writable($targetPath)) {
+		        	move_uploaded_file($tempFile, $targetFile);
+		        	$a = array(&quot;filename&quot;=&gt;$newFileName,&quot;typef&quot;=&gt;$typef);
+		        	$code = 200;
+		        } else {
+		        	$a = array(&quot;error&quot;=&gt;&quot;Upload directory is not writable, or does not exist.&quot;);
+		        	$code = 500;
+		        }
+
+			} else {
+				$a = array( &quot;error&quot;=&gt;$phpFileUploadErrors[$errn] );
+		        $code = 500;
+		    }
+        } else {
+	    	$a = array(&quot;error&quot;=&gt;&quot;Something went wrong whith this file&quot;, &quot;result&quot; =&gt; json_encode($_FILES));
+	        $code = 500;
+	    }
+	    return $this-&gt;output
+        -&gt;set_content_type('application/json')
+        -&gt;set_status_header($code)
+        -&gt;set_output(json_encode($a));
+	}
+
+</code></pre>
+<p>Observen la constante <code>UPLOADREMOTEDIRECTORY</code> ésta la declaramos en el constructor de la clase para definir la ruta fisica del servidor donde se colocará el archivo subido. Para evitar duplicidad, a cada archivo subido le añado un timestamp para volverlo único. Si todo sale bien retornará el nombre del archivo y el tipo a dropzone.</p>
+<p>La respuesta de esta fucion es un JSON que recibe dropzone y de acuerdo al tipo de error mostrará el mensaje de aceptado o rechazado.</p>
+<h2 id="conversindearchivo">Conversión de archivo</h2>
+<p>Una vez subido el archivo y que ya sabemos el nombre unico y la ruta del archivo, procedemos a instalar un paquete en nuestro sistema operativo Linux. Esto nos ayudará a convertir nuestro archivo de Excel a CSV.</p>
+<pre><code class="language-bash">$ sudo apt-get install gnumeric
+</code></pre>
+<p>Gnumeric es una hoja de calculo que nos permite usar una herramienta que viene dentro de este paquete llamado <code>ssconvert</code><br>
+Convertimos nuestro archivo de excel a csv con todo y pestañas, cada pestaña se colocará en un archivo diferente</p>
+<pre><code class="language-bash">$ ssconvert --export-file-per-sheet miarchivo.xlsx miarchivo.csv
+</code></pre>
+<p>con la opcion <code>-S o --export-file-per-sheet</code> creará un archivo csv por cada pestaña que contenga el archivo de excel y lo nombrará por numero de índice. Es decir si <code>miarchivo.xls</code>tiene 2 pestañas, creará los archivos <code>miarchivo.csv.0 y miarchivo.csv.1</code>.</p>
+<p>Con este script ejemplificamos el uso de la herramienta.</p>
+<pre><code class="language-php">        $setfile = json_decode($this-&gt;input-&gt;post('f'),true);
+        $afiles = array_filter($setfile); 
+		$aconv = '';
+		$arrfiles = array();
+        $aftype = array(&quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;,'&quot;application/octet-stream&quot;',&quot;application/vnd.ms-excel&quot;,&quot;application/octet-stream&quot;);
+		foreach ($afiles as $key =&gt; $value) {
+			$originalfilename = isset($value['fileName']) ? $value['fileName'] : '';
+			$sfilename = isset($value['serverFileName']['filename']) ? $value['serverFileName']['filename'] : ''; 
+			$sfiletype = isset($value['serverFileName']['typef']) ? $value['serverFileName']['typef'] : ''; 
+			if ( file_exists( UPLOADWEBDIRECTORY . $sfilename ) ) {
+				if ( !empty($sfilename) &amp;&amp; !empty($sfiletype) ) {
+					if (  in_array($sfiletype, $aftype)  ) {
+						$filecsv = UPLOADWEBDIRECTORY . pathinfo($this-&gt;normalizeString($sfilename),PATHINFO_FILENAME)  . '.csv';
+						$filexls = UPLOADWEBDIRECTORY . $sfilename;
+						$f = basename($filecsv,&quot;.csv&quot;);
+						$arrfiles[$f] = $originalfilename;
+						exec(&quot;/usr/bin/ssconvert --export-file-per-sheet &quot; . '&quot;' . $filexls .'&quot;'. &quot; &quot; . $filecsv . &quot; &gt;&gt; &quot; . $filecsv . '.log 2&gt;&amp;1');
+						$aconv = file_get_contents($filecsv . '.log', true);
+                        syslog(LOG_INFO,$aconv);
+						unlink($filecsv . '.log');
+					} else $alog[] = &quot;file types &quot; . $sfiletype .&quot; of file &quot; . $sfilename . &quot; not supported!! &quot;;
+				}
+			} else $alog[] = &quot;file &quot; . $sfilename . &quot; not found!! &quot;;
+		}
+</code></pre>
+<p>Este script se dispara cuando desde nuestra interfaz hacemos click en nuestro boton <code>Save changes</code>, básicamente dropzone envia por ajax un objeto json donde viene el nombre del archivo, el tamaño, el tipo, etc. y guardamos el POST en una variable como arreglo <code>$setfile = json_decode($this-&gt;input-&gt;post('f'),true);</code> nos aseguramos que no traiga elementos vacíos y comenzamos un ciclo para validar si es un archivo de excel válido identificando su tipo. Si todo está dentro de lo esperado, convertimos nuestros archivos a csv. Durante todo el proceso siempre guardamos en un arreglo <code>$alog</code> un log de lo que va sucediendo en caso de error y éste es enviado al usuario para identificar lo que está pasando en el proceso. El envío del mensaje de error lo puedes hacer en cualquier parte del proceso, en mi caso lo hago hasta el final.</p>
+<p>Hasta aqui la primera parte de nuestro proceso de carga de archivo, en la segunda entrega veremos</p>
+<ul>
+<li>Validacion de cabeceras</li>
+<li>Preparacion de la base de datos</li>
+</ul>
+</div>]]></content:encoded></item><item><title><![CDATA[Crea un API REST en Python Flask, Parte 1 - Documentación con Swagger]]></title><description><![CDATA[<div class="kg-card-markdown"><p>En esta serie crearemos un API REST en Python utilizando el microframework Flask.</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/-YINuWvpkW4" frameborder="0" gesture="media" allowfullscreen></iframe>
+<p>Comenzaremos con la planeación y documentación que servirá como referencia para el desarrollador FrontEnd, nuestro objetivo es crear puntos de acceso a estas tablas que utilizo para el registro y autenticación de usuarios.</p>
+<p><img src="http://localhost:2368/content/images/2017/10/Screen-Shot-2017-10-21-at-3.27.55-PM.png" alt="Screen-Shot-2017-10-21-at-3.27.55-PM"><br>
+Como podrán apreciar en</p></div>]]></description><link>http://localhost:2368/crea-un-rest-api-con-flask-parte-1-planeacion-con-swagger/</link><guid isPermaLink="false">5b5788fbb701761577943d4c</guid><category><![CDATA[Python]]></category><category><![CDATA[Flask]]></category><category><![CDATA[Swagger]]></category><category><![CDATA[OAS]]></category><category><![CDATA[YML]]></category><category><![CDATA[API REStful]]></category><dc:creator><![CDATA[carlos]]></dc:creator><pubDate>Tue, 24 Oct 2017 15:51:58 GMT</pubDate><media:content url="http://localhost:2368/content/images/2017/10/create-api-rest.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://localhost:2368/content/images/2017/10/create-api-rest.png" alt="Crea un API REST en Python Flask, Parte 1 - Documentación con Swagger"><p>En esta serie crearemos un API REST en Python utilizando el microframework Flask.</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/-YINuWvpkW4" frameborder="0" gesture="media" allowfullscreen></iframe>
+<p>Comenzaremos con la planeación y documentación que servirá como referencia para el desarrollador FrontEnd, nuestro objetivo es crear puntos de acceso a estas tablas que utilizo para el registro y autenticación de usuarios.</p>
+<p><img src="http://localhost:2368/content/images/2017/10/Screen-Shot-2017-10-21-at-3.27.55-PM.png" alt="Crea un API REST en Python Flask, Parte 1 - Documentación con Swagger"><br>
+Como podrán apreciar en la imagen, tenemos la tabla principal Users y 3 catálogos (Groups, Branch y Warehouse) y la relación entre ellas es de muchos a muchos para eso nos sirven las tablas Users_Groups, Users_Branch, Users_Whs.<br>
+En esta etapa vamos a documentar la API utilizando una herramienta llamada Swagger que se basa en las especificaciones OpenAPI (OAS). Para comenzar entramos al sitio de <a href="https://swagger.io/">swagger</a>. En este sitio puedes comenzar a trabajar directamente en su editor en linea SwaggerHub o puedes descargar la aplicación y ejecutarlo localmente.<br>
+En mi caso voy a trabajar con SwaggerHub. Por defecto abre un archivo en formato YML como ejemplo que te servirá de guia para crear el propio.</p>
+<p><img src="http://localhost:2368/content/images/2017/10/Screen-Shot-2017-10-24-at-10.17.48-AM.png" alt="Crea un API REST en Python Flask, Parte 1 - Documentación con Swagger"><br>
+Para crear una nueva API, elegimos <em>+ CREATE NEW</em> y <em>Create New API</em></p>
+<p>A continuacion proporcionamos la version, el template y el nombre. Como es una cuenta gratuita solo podemos crear APIs publicas. En la versión se refiere a la versión del estandar OAS, para la version de tu API, se define dentro del archivo YML.<br>
+<img src="http://localhost:2368/content/images/2017/10/Screen-Shot-2017-10-24-at-10.23.51-AM.png" alt="Crea un API REST en Python Flask, Parte 1 - Documentación con Swagger"><br>
+Una vez creado nuestro proyecto, veremos nuestro editor<br>
+<img src="http://localhost:2368/content/images/2017/10/Screen-Shot-2017-10-21-at-4.34.32-PM-1.png" alt="Crea un API REST en Python Flask, Parte 1 - Documentación con Swagger"><br>
+La vista se divide por defecto, entre el editor y la vista previa, conforme vas escribiendo se va reflejando los cambios y tambien si existen errores, se mostrará el aviso y la linea donde se encuentra el error.</p>
+<blockquote>
+<p>En caso de que siga mostrando error aún cuando ya corregiste todo, solo bastará recargar la pagina.</p>
+</blockquote>
+<p>Aqui el resultado de la definicion de nuestra API para las tablas mostradas en la imagen</p>
+<pre><code class="language-yaml">swagger: '2.0'
+info:
+  description: API sistema de autenticacion de usuarios
+  version: 1.0.0
+  title: API Usuarios
+  contact:
+    email: experttyce@gmail.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+host: tudominio.com
+basePath: /api/v1
+tags:
+  - name: users
+    description: Registro e identificacion de usuarios
+  - name: group
+    description: Grupos de usuarios y roles
+  - name: branch
+    description: Catalogo de branch
+  - name: warehouse
+    description: Catalogo de warehouse
+
+schemes:
+  - https
+paths:
+  /user/{_id}:
+    get:
+      tags:
+      - users
+      summary: Obtiene los datos de un usuario
+      description: Datos del usuario
+      parameters:
+      - name: &quot;_id&quot;
+        in: &quot;path&quot;
+        required: true
+        type: &quot;integer&quot;
+      produces:
+        - applications/json
+      responses:
+        '200':
+          description: &quot;OK&quot;
+          schema:
+            $ref: '#/definitions/users'
+    put:
+      tags:
+      - users
+      summary: Actualiza los datos del usuario
+      description: Actualizacion de usuarios, asignacion de grupo, branch o whs
+      parameters:
+      - name: &quot;_id&quot;
+        in: &quot;path&quot;
+        required: true
+        type: &quot;integer&quot;
+      - in: &quot;body&quot;
+        name: &quot;body&quot;
+        description: &quot;registra nuevo warehouse&quot;
+        required: true
+        schema:
+          type: &quot;object&quot;
+          properties:
+            first_name:
+              type: &quot;string&quot; 
+            last_name:
+              type: &quot;string&quot; 
+            password:
+              type: &quot;string&quot; 
+            email:
+              type: &quot;string&quot; 
+            company:
+              type: &quot;string&quot; 
+            ip_address:
+              type: &quot;string&quot; 
+            username:
+              type: &quot;string&quot; 
+            salt:
+              type: &quot;string&quot;
+            activation_code:
+              type: &quot;string&quot;
+            forgotten_password_code:
+              type: &quot;string&quot; 
+            forgotten_password_time:
+              type: &quot;string&quot; 
+            remember_code:
+              type: &quot;string&quot; 
+            last_login:
+              type: &quot;string&quot; 
+            active:
+              type: &quot;string&quot; 
+            phone:
+              type: &quot;string&quot; 
+            photo:
+              type: &quot;string&quot; 
+            groups:
+              type: &quot;array&quot;
+              items:
+                type: integer
+                format: int64
+              example: [1, 2, 3]
+            branch:
+              type: &quot;array&quot;
+              items:
+                type: integer
+                format: int64
+              example: [1, 2, 3]
+            warehouse:
+              type: &quot;array&quot;
+              items:
+                type: integer
+                format: int64
+              example: [1, 2, 3]
+
+      responses:
+        '200':
+          description: &quot;OK&quot;
+  /users/:
+    get:
+      tags: 
+      - users
+      summary: Listado de usuarios
+      description: Lista de usuarios, grupos, branch y whs
+      produces: 
+        - application/json
+      responses:
+        '200':
+          description: &quot;OK&quot;
+          schema:
+            $ref: '#/definitions/users'
+  /register/:
+    post:
+      tags: 
+      - users
+      summary: Registro de usuarios
+      description: Nuevos usuarios
+      produces: 
+        - application/json
+      parameters: 
+      - in: &quot;body&quot;
+        name: &quot;body&quot;
+        description: &quot;registra nuevo usuario&quot;
+        required: true
+        schema:
+          type: &quot;object&quot;
+          properties:
+            first_name:
+              type: &quot;string&quot;
+            last_name:
+              type: &quot;string&quot;
+            email:
+              type: &quot;string&quot;
+            password:
+              type: &quot;string&quot;
+      responses:
+        '200':
+          description: &quot;OK&quot;
+          schema:
+            type: &quot;object&quot;
+            properties:
+              message:
+                type: &quot;string&quot;
+            example: 
+                message : &quot;Usuario registrado&quot;
+        '409':
+          description: &quot;Conflicto&quot;
+          schema:
+            type: &quot;object&quot;
+            properties:
+              message:
+                type: &quot;string&quot;
+            example: 
+                message: &quot;Correo ya existe&quot;
+  /auth/:
+    post:
+      tags:
+      - users
+      summary: Login de usuario
+      description: Correo y contraseña para loguearse
+      produces:
+        - application/json
+      parameters:
+        - name: username
+          in: query
+          description: email del usuario
+          required: true
+          type: string
+        - name: password
+          in: query
+          description: Contraseña en texto plano
+          required: true
+          type: string
+      responses:
+        '200':
+          description: &quot;OK&quot;
+          schema:
+            type: &quot;object&quot;
+            properties:
+              access_token:
+                type: &quot;string&quot;
+            example: 
+                access_token : &quot;eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1MDg2NTExNTEsImlhdCI6MTUwODY1MDg1MSwibmJmIjoxNTA4NjUwODUxLCJpZGVudGl0eSI6MX0.0AeyzLGk-tb0Szb-C3yTfmuET43TAWoWyGE1MXcSbU8&quot;
+  /warehouses/:
+    get:
+      tags:
+      - warehouse
+      summary: Regresa lista de warehouses
+      description: Lista de nombres de warehouse
+      produces: 
+        - application/json
+      responses:
+        '200':
+          description: &quot;OK&quot;
+          schema:
+            $ref: '#/definitions/cat_warehouse'
+  /warehouse/{_id}:
+    get:
+      tags:
+      - warehouse
+      summary: Obtiene los datos de un warehouse
+      description: Datos de warehouse
+      parameters: 
+      - name: &quot;_id&quot;
+        in: &quot;path&quot;
+        required: true
+        type: &quot;integer&quot;
+      produces: 
+        - application/json
+      responses:
+        '200':
+          description: &quot;OK&quot;
+          schema:
+            $ref: '#/definitions/cat_warehouse'
+    put:
+      tags:
+      - warehouse
+      summary: Actualiza warehouse
+      parameters:
+      - name: &quot;_id&quot;
+        in: &quot;path&quot;
+        required: true
+        type: &quot;integer&quot;
+      - in: &quot;body&quot;
+        name: &quot;body&quot;
+        description: &quot;registra nuevo warehouse&quot;
+        required: true
+        schema:
+          type: &quot;object&quot;
+          properties:
+            whs_name:
+              type: &quot;string&quot;
+            whs_status:
+              type: &quot;integer&quot;
+            whs_dtsstatus:
+              type: &quot;integer&quot;
+          example:
+              whs_name : &quot;SEKO-LAX&quot;
+              whs_status: 1
+              whs_dtsstatus: 1
+      produces: 
+        - application/json
+      responses:
+        '200':
+          description: &quot;OK&quot;
+  /warehouse/:
+    post:
+      tags: 
+      - warehouse
+      summary: Registra nuevo warehouse
+      description: Inserta warehouse
+      produces: 
+        - application/json
+      parameters: 
+      - in: &quot;body&quot;
+        name: &quot;body&quot;
+        description: &quot;registra nuevo warehouse&quot;
+        required: true
+        schema:
+          type: &quot;object&quot;
+          properties:
+            whs_name:
+              type: &quot;string&quot;
+          example:
+              whs_name : &quot;SEKO-LAX&quot;
+      responses:
+        '201':
+          description: &quot;Creado&quot;
+          schema:
+            type: &quot;object&quot;
+            properties:
+              message:
+                type: &quot;string&quot;
+            example: 
+                message : &quot;Warehouse creado&quot;
+      
+          
+  /groups/:
+    get:
+      tags:
+      - group
+      summary: Regresa la lista de grupos
+      description: Lista de grupos
+      produces: 
+        - application/json
+      responses:
+        '200':
+          description: &quot;OK&quot;
+          schema:
+            $ref: '#/definitions/groups'
+      
+  /group/:
+    post:
+      tags:
+      - group
+      summary: Registra nuevo grupo
+      description: Grupo de usuarios o roles
+      parameters: 
+      - in: &quot;body&quot;
+        name: &quot;body&quot;
+        description: &quot;registra nuevo grupo&quot;
+        required: true
+        schema:
+          type: &quot;object&quot;
+          properties:
+            name:
+              type: &quot;string&quot;
+            description:
+              type: &quot;string&quot;
+          example:
+              name : &quot;Admin&quot;
+              description: &quot;Super Usuarios&quot;  
+      produces: 
+        - application/json
+      responses:
+        '201':
+          description: &quot;Creado&quot;
+          schema:
+            type: &quot;object&quot;
+            properties:
+              message:
+                type: &quot;string&quot;
+            example: 
+                message : &quot;Grupo creado&quot;
+  /group/{_id}:
+    get:
+      tags: 
+        - group
+      summary: Regresa los datos de un grupo
+      description: Grupo de usuarios o rol
+      produces: 
+        - application/json
+      parameters: 
+      - name: &quot;_id&quot;
+        in: &quot;path&quot;
+        required: true
+        type: &quot;integer&quot;
+      responses:
+        '200':
+          description: &quot;OK&quot;
+          schema:
+            $ref: '#/definitions/groups'
+    put:
+      tags:
+        - group
+      summary: Actualiza los datos del grupo
+      description: Grupos de usuarios o rol
+      produces:
+        - application/json
+      parameters:
+      - name: &quot;_id&quot;
+        in: &quot;path&quot;
+        required: true
+        type: &quot;integer&quot;
+      - in: &quot;body&quot;
+        name: &quot;body&quot;
+        description: &quot;registra nuevo grupo&quot;
+        required: true
+        schema:
+          type: &quot;object&quot;
+          properties:
+            name:
+              type: &quot;string&quot;
+            description:
+              type: &quot;string&quot;
+          example:
+              name : &quot;Admin&quot;
+              description: &quot;Super Usuarios&quot;  
+      responses:
+        '200':
+          description: &quot;OK&quot;
+          
+        '404':
+          description: &quot;no encontrado&quot;
+          schema:
+            type: &quot;object&quot;
+            properties:
+              message:
+                type: &quot;string&quot;
+            example: 
+                message : &quot;Grupo no encontrado&quot;
+          
+  /branches/:
+    get:
+      tags:
+        - branch
+      summary: Regresa la lista de branches
+      description: Lista nombres
+      produces:
+        - application/json
+
+      responses:
+        '200':
+          description: &quot;OK&quot;
+          schema:
+            $ref: '#/definitions/cat_branch'
+
+  /branch/:
+    post:
+      tags:
+      - branch
+      summary: &quot;Inserta nuevo branch&quot;
+      produces: 
+        - &quot;application/json&quot;
+      parameters: 
+      - in: &quot;body&quot;
+        name: &quot;body&quot;
+        description: &quot;nombre branch&quot;
+        required: true
+        schema:
+          type: &quot;object&quot;
+          properties:
+            branch_name:
+              type: &quot;string&quot;
+          example:
+                branch_name : SFO
+      responses:
+        '201':
+          description: &quot;creado&quot;
+          schema:
+            type: &quot;object&quot;
+            properties:
+              message:
+                type: &quot;string&quot;
+            example: 
+                message : &quot;Branch creado&quot;
+  /branch/{_id}:
+    get:
+      tags:
+      - branch
+      summary: Regresa los datos de un branch por ID
+      description: Datos del branch
+      produces: 
+        - &quot;application/json&quot;
+      parameters: 
+      - name: &quot;_id&quot;
+        in: &quot;path&quot;
+        required: true
+        type: &quot;integer&quot;
+      responses:
+        '200':
+          description: &quot;correcto&quot;
+          schema:
+            $ref: '#/definitions/cat_branch'
+        '404':
+          description: &quot;no encontrado&quot;
+          schema:
+            type: &quot;object&quot;
+            properties:
+              message:
+                type: &quot;string&quot;
+            example: 
+                message : &quot;Branch no encontrado&quot;
+    put:
+      tags:
+      - branch
+      summary: &quot;Actualiza un registro&quot;
+      produces: 
+        - &quot;application/json&quot;
+      parameters:
+      - name: &quot;_id&quot;
+        in: &quot;path&quot;
+        required: true
+        type: &quot;integer&quot;
+      - in: &quot;body&quot;
+        name: &quot;body&quot;
+        description: &quot;Updated user object&quot;
+        required: true
+        schema:
+          type: &quot;object&quot;
+          properties:
+            branch_name:
+              type: &quot;string&quot;
+          example:
+                branch_name : SFO
+      responses:
+        '200':
+          description: &quot;correcto&quot;
+          schema:
+            type: &quot;object&quot;
+            properties:
+              message:
+                type: &quot;string&quot;
+            example: 
+                message : &quot;Branch actualizado&quot;
+        '404':
+          description: &quot;no encontrado&quot;
+          schema:
+            type: &quot;object&quot;
+            properties:
+              message:
+                type: &quot;string&quot;
+            example: 
+                message : &quot;Branch no encontrado&quot;
+
+
+
+
+definitions:
+  groups:
+    type: &quot;object&quot;
+    properties:
+      id:
+        type: &quot;integer&quot;
+      name:
+        type: &quot;string&quot;
+      description:
+        type: &quot;string&quot;
+  cat_warehouse:
+    type: &quot;object&quot;
+    properties:
+      idwhs:
+        type: &quot;integer&quot;
+      whs_name:
+        type: &quot;string&quot;
+      whs_status:
+        type: &quot;integer&quot;
+      whs_dtsstatus:
+        type: &quot;integer&quot;
+  users:
+    type: &quot;object&quot;
+    properties:
+        id:
+          type: &quot;integer&quot; 
+        first_name:
+          type: &quot;string&quot; 
+        last_name:
+          type: &quot;string&quot; 
+        password:
+          type: &quot;string&quot; 
+        email:
+          type: &quot;string&quot;
+          format: &quot;email&quot;
+        company:
+          type: &quot;string&quot; 
+        ip_address:
+          type: &quot;string&quot; 
+        username:
+          type: &quot;string&quot; 
+        salt:
+          type: &quot;string&quot; 
+        activation_code:
+          type: &quot;string&quot; 
+        forgotten_password_code:
+          type: &quot;string&quot; 
+        forgotten_password_time:
+          type: &quot;string&quot;
+          format: date-time 
+        remember_code:
+          type: &quot;string&quot; 
+        created_on:
+          type: &quot;string&quot;
+          format: date-time 
+        last_login:
+          type: &quot;string&quot;
+          format: date-time 
+        active:
+          type: &quot;integer&quot; 
+        phone:
+          type: &quot;string&quot; 
+        photo:
+          type: &quot;string&quot; 
+        groups:
+          $ref: '#/definitions/groups'
+        warehouse:
+          $ref: '#/definitions/cat_warehouse'
+        branch:
+          $ref: '#/definitions/cat_branch'
+
+  cat_branch:
+    type: &quot;object&quot;
+    properties:
+      idbranch:
+        type: &quot;integer&quot;
+      branch_name:
+        type: &quot;string&quot;
+    example:   # Sample object
+                id: 1
+                branch_name: SDS
+</code></pre>
+<p>Una vez validado que todo funciona correctamente, podemos descargar nuestra documentación y montarlo en un servidor.<br>
+<img src="http://localhost:2368/content/images/2017/10/Screen-Shot-2017-10-24-at-10.37.39-AM.png" alt="Crea un API REST en Python Flask, Parte 1 - Documentación con Swagger"><br>
+Y asi es como queda nuestra API</p>
+<p>Podemos descargar el proyecto para distintos lenguajes.<br>
+<img src="http://localhost:2368/content/images/2017/10/Screen-Shot-2017-10-24-at-10.44.15-AM.png" alt="Crea un API REST en Python Flask, Parte 1 - Documentación con Swagger"><br>
+Podemos apreciar algunos mas comunes como Lumen (PHP Laravel), Nodejs o Python-flask. Solo sigue las instrucciones que vienen en el archivo Readme del proyecto y tendrás ejecutando tu documentacion en segundos.<br>
+Hasta aquí esta primera parte de la planeacion y documentación de nuestra API, en este caso lo voy a desarrollar en Python Flask, pero tu puedes elegir el lenguaje que mas te guste, es lo interesante de esta herramienta.</p>
+<p>Utiliza el ejemplo que te proporciona la herramienta y revisa la documentación que te proporciona la pagina.</p>
+<p>Les dejo el link del repositorio del proyecto de la documentacion para NodeJS <a href="https://github.com/corozcop/swagger-api">Github</a></p>
+<p>En la siguiente entrega, iniciaremos con la codificacion del backend en Python y su microfamework Flask.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[Configurando Sublime Text]]></title><description><![CDATA[<div class="kg-card-markdown"><p>Sublime text es un editor ligero, configurable y facil de utilizar, muy útil para la codificacion. Si bien es cierto que no cubre las características de un IDE, cumple muy bien su funcion si se le configura adecuandamente.</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/zYvmkxeSzMI" frameborder="0" allowfullscreen></iframe>
+<p>En esta ocasion vamos a descargar y configurar sublime text para utilizarlo</p></div>]]></description><link>http://localhost:2368/configurando-sublime-text/</link><guid isPermaLink="false">5b5788fbb701761577943d40</guid><category><![CDATA[Sublime Text]]></category><category><![CDATA[PHP]]></category><category><![CDATA[codeigniter]]></category><category><![CDATA[javascript]]></category><category><![CDATA[Jquery]]></category><category><![CDATA[Ajax]]></category><dc:creator><![CDATA[carlos]]></dc:creator><pubDate>Mon, 02 Oct 2017 16:52:23 GMT</pubDate><media:content url="http://localhost:2368/content/images/2017/10/sublime.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://localhost:2368/content/images/2017/10/sublime.jpg" alt="Configurando Sublime Text"><p>Sublime text es un editor ligero, configurable y facil de utilizar, muy útil para la codificacion. Si bien es cierto que no cubre las características de un IDE, cumple muy bien su funcion si se le configura adecuandamente.</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/zYvmkxeSzMI" frameborder="0" allowfullscreen></iframe>
+<p>En esta ocasion vamos a descargar y configurar sublime text para utilizarlo para programar en PHP con el framework ligero Codeigniter.</p>
+<p>Descargamos nuestra version de acuerdo al sistema operativo que utilizamos en el <a href="https://www.sublimetext.com/">link</a> e instalamos, incluso puedes descargar la carpeta lista para ejecutarse en caso de que tu sistema operativo no se encuentre en la lista de los descargables directos del repositorio.</p>
+<h1 id="1grabarcuandopierdaelfoco">1. Grabar cuando pierda el foco</h1>
+<p>Esta es una de las características que considero muy útiles, sobretodo cuando estas codificando y probando. Suele pasar que en pantalla no ves el resultado de tus cambios y no te diste cuenta que te faltó hacer algo tan simple como guardar tus cambios, esta opcion te librará de eso.<br>
+Entramos a <em>Preferencias -&gt; Settings</em><br>
+<img src="http://localhost:2368/content/images/2017/10/Screen-Shot-2017-10-02-at-11.17.54-AM.png" alt="Configurando Sublime Text"><br>
+y pegamos lo siguiente en la seccion derecha &quot;Preferences.sublime-settings -- User&quot;</p>
+<pre><code>&quot;save_on_focus_lost&quot;: true
+</code></pre>
+<p>queda de la siguiente forma<br>
+<img src="http://localhost:2368/content/images/2017/10/Screen-Shot-2017-10-02-at-11.22.02-AM.png" alt="Configurando Sublime Text"><br>
+Guardamos cambios y listo.</p>
+<h1 id="2activarpackagecontrol">2. Activar Package Control</h1>
+<p>Para habilitar la instalacion de paquetes, nos dirigimos a esta pagina <a href="https://packagecontrol.io/installation">https://packagecontrol.io/installation</a> y copiamos el bloque de codigo que corresponda a la version de sublime text que hayan instalado<br>
+<img src="http://localhost:2368/content/images/2017/10/Screen-Shot-2017-10-02-at-11.31.47-AM.png" alt="Configurando Sublime Text"><br>
+En nuestro editor entramos al menú <em>View -&gt; Show Console</em> y pegamos el codigo que copiamos y Enter.<br>
+Una vez terminado todo el proceso y si no ocurre ningun error, podemos utilizar el Control de paquetes para instalar los plugins necesarios. <em>Si ocurre algun error, revisa que tu bloque de código que copiaste no traiga espacios al principio o al final.</em></p>
+<h1 id="3pluginsparacodeignitercssyjavascript">3. Plugins para Codeigniter, CSS y JavaScript</h1>
+<p>Emmet es un plugin que nos ayuda a codificar con la ayuda de abreviaturas, mas adelante veremos algunos ejemplos, los otros plugins nos servirán para escribir bloques de codigo en PHP como modelos o controladores y para Javascript nos ayudará a escribir la sintaxis correcta de jquery y ajax.<br>
+Entramos al menú <em>Tools -&gt; Command Palette</em> nos aparecerá un recuadro donde borramos el contenidos y solo tecleamos <code>package control</code> y de la lista elegimos <code>:Install Package</code><br>
+Ahora buscamos los plugins <code>emmet, codeigniter, jquery, html5 y javascript</code>, por cada plugin que instalemos hay que repetir el proceso.</p>
+<p>Existen mas plugins y opciones para personalizar este editor para el lenguaje que ustedes deseen, estos 3 son los que requieren de entrada para la codificacion en PHP con codeigniter.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[Edición remota de archivos con Sublime Text]]></title><description><![CDATA[<div class="kg-card-markdown"><h2 id="editatusarchivosremotosvisualmente">Edita tus archivos remotos visualmente</h2>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/GNqJXEak-pk" frameborder="0" allowfullscreen></iframe>
+<p>En algun momento tendrás la necesidad de editar algun archivo en tu servidor de producción y si es basado en Linux, entonces sabrás que no debemos tener instalado un ambiente de escritorio, por temas de performance y demás.<br>
+Entonces cómo le hago para editar un</p></div>]]></description><link>http://localhost:2368/depurar-en-produccion/</link><guid isPermaLink="false">5b5788fbb701761577943d3f</guid><category><![CDATA[Linux]]></category><category><![CDATA[Sublime Text]]></category><dc:creator><![CDATA[carlos]]></dc:creator><pubDate>Sat, 23 Sep 2017 21:26:06 GMT</pubDate><media:content url="http://localhost:2368/content/images/2017/10/pexels-photo-207580-1.jpeg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><h2 id="editatusarchivosremotosvisualmente">Edita tus archivos remotos visualmente</h2>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/GNqJXEak-pk" frameborder="0" allowfullscreen></iframe>
+<img src="http://localhost:2368/content/images/2017/10/pexels-photo-207580-1.jpeg" alt="Edición remota de archivos con Sublime Text"><p>En algun momento tendrás la necesidad de editar algun archivo en tu servidor de producción y si es basado en Linux, entonces sabrás que no debemos tener instalado un ambiente de escritorio, por temas de performance y demás.<br>
+Entonces cómo le hago para editar un archivo de configuracion, algun programa, algun script, etc., desde consola. Actualmente existen editores muy amigables para consola de Linux, los mas conocidos vim, nano y emacs. Pero si no estas acostumbrado a utilizar editores en modo texto, existe otra alternativa, SublimeText puede ayudarte a editar cualquier archivo de modo visual, desde tu terminal a traves de un tunel ssh hacia tu servidor, sin tener que habilitar FTP, FTPS o SFTP.</p>
+<p>Para poder realizar la tarea anterior, necesitamos a Sublime Text y acceso a nuestro servidor de producción a traves del puerto 22(SSH).</p>
+<p>Primero que nada instalamos un paquete a Sublime Text llamado <mark>rsub</mark><br>
+<img src="http://localhost:2368/content/images/2017/09/Screenshot-from-2017-09-23-15-58-49.png" alt="Edición remota de archivos con Sublime Text"><br>
+Ahora vamos a crear un tunel SSH entre nuestro equipo local y el servidor de produccion</p>
+<h3 id="parawindows">Para Windows</h3>
+<p><img src="http://localhost:2368/content/images/2017/09/putty_tunnel.PNG" alt="Edición remota de archivos con Sublime Text"></p>
+<h3 id="paramacolinux">Para Mac o Linux</h3>
+<pre><code class="language-bash">$ ssh -R 52698:localhost:52698 usuario_servidor@IP_o_dominio
+</code></pre>
+<p>Necesitamos <mark>ruby gems</mark>, asegurate de tener instalado ruby en tu servidor</p>
+<pre><code class="language-bash">$ sudo apt install ruby
+$ sudo apt install rubygems-integration
+$ gem -v
+</code></pre>
+<p>Una vez que comprobamos que se encuentra instalado y funcionando ruby gems instalamos el paquete <mark>rmate</mark></p>
+<pre><code class="language-bash">$ sudo gem install rmate
+</code></pre>
+<p>Y finalmente nos situamos en el directorio de nuestro archivo a editar y tecleamos</p>
+<pre><code class="language-bash">$ rmate index.php
+</code></pre>
+<p>En la terminal aparentemente no hará nada, pero en realidad lo que verás en tu editor Sublime Text es tu archivo de produccion listo para ser editado, todos los cambios guardados se reflejarán en tu archivo de produccion.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[Como es un dia normal de trabajo]]></title><description><![CDATA[<div class="kg-card-markdown"><p>Para mi como programador en PHP, un dia normal de trabajo es arrancar mi Hackintosh, levantar mi ambiente de desarrollo vagrant.</p>
+<p>Mi ambiente de desarrollo vagrant viene con:</p>
+<ul>
+<li>Linux Ubuntu 16 LTS</li>
+<li>PHP 7.0</li>
+<li>PHP-FPM</li>
+<li>Nginx</li>
+<li>PostgreSQL 9.5</li>
+<li>Mailhog</li>
+<li>Beanstalkd</li>
+<li>JaserperServer</li>
+</ul>
+<p>Desarrollo con ayuda de Codeigniter 2.x,</p></div>]]></description><link>http://localhost:2368/como-es-un-dia-normal-de-trabajo/</link><guid isPermaLink="false">5b5788fbb701761577943d3e</guid><category><![CDATA[PHP]]></category><category><![CDATA[Linux]]></category><dc:creator><![CDATA[carlos]]></dc:creator><pubDate>Tue, 05 Sep 2017 19:34:30 GMT</pubDate><media:content url="http://localhost:2368/content/images/2017/09/Dashboard.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://localhost:2368/content/images/2017/09/Dashboard.png" alt="Como es un dia normal de trabajo"><p>Para mi como programador en PHP, un dia normal de trabajo es arrancar mi Hackintosh, levantar mi ambiente de desarrollo vagrant.</p>
+<p>Mi ambiente de desarrollo vagrant viene con:</p>
+<ul>
+<li>Linux Ubuntu 16 LTS</li>
+<li>PHP 7.0</li>
+<li>PHP-FPM</li>
+<li>Nginx</li>
+<li>PostgreSQL 9.5</li>
+<li>Mailhog</li>
+<li>Beanstalkd</li>
+<li>JaserperServer</li>
+</ul>
+<p>Desarrollo con ayuda de Codeigniter 2.x, IonAuth, tema principal <a href="https://goo.gl/RU14Pg">Inspinia</a></p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/iQT1mQF2uSE" frameborder="0" allowfullscreen></iframe>
+</div>]]></content:encoded></item><item><title><![CDATA[Instala un servidor SMTP para pruebas en entornos de desarrollo con Mailhog]]></title><description><![CDATA[<div class="kg-card-markdown"><p>Mailhog es una herramienta para pruebas de correo electronico en ambientes de desarrollo, lo cual es muy util ya que de este modo evitamos molestar a usuarios reales enviandoles correos de prueba cuando estamos desarrollando aplicaciones, te pueden considerar como spam.</p>
+<p>Pero que tal si podemos enviar correos a los</p></div>]]></description><link>http://localhost:2368/instala-un-servidor-smtp-para-pruebas-en-entornos-de-desarrollo/</link><guid isPermaLink="false">5b5788fbb701761577943d3d</guid><category><![CDATA[smtp]]></category><category><![CDATA[mailhog]]></category><category><![CDATA[Linux]]></category><dc:creator><![CDATA[carlos]]></dc:creator><pubDate>Thu, 31 Aug 2017 19:16:38 GMT</pubDate><media:content url="http://localhost:2368/content/images/2017/10/SMTP.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://localhost:2368/content/images/2017/10/SMTP.png" alt="Instala un servidor SMTP para pruebas en entornos de desarrollo con Mailhog"><p>Mailhog es una herramienta para pruebas de correo electronico en ambientes de desarrollo, lo cual es muy util ya que de este modo evitamos molestar a usuarios reales enviandoles correos de prueba cuando estamos desarrollando aplicaciones, te pueden considerar como spam.</p>
+<p>Pero que tal si podemos enviar correos a los destinatarios que queramos sin que salga a internet, en esto nos ayuda mucho Mailhog. Esta herramienta nos configura un servidor SMTP y una interfaz web donde veremos como van formateados nuestros correos. Solo basta descargar el binario en la pagina de <a href="https://github.com/mailhog/MailHog/releases/v1.0.0">github</a>, en este caso yo descargaré el de linux de 64 bits <code>MailHog_linux_amd64</code>, este archivo lo copiaremos al directorio local bin de linux.</p>
+<pre><code class="language-bash">$ sudo cp MailHog_linux_amd64 /usr/local/bin/mailhog
+</code></pre>
+<p>Ahora creamos un servicio con systemd para que se encuentre disponible desde el arranque del sistema operativo</p>
+<pre><code class="language-vim">$ sudo vim /etc/systemd/system/mailhog.service 
+</code></pre>
+<p>y pegamos lo siguiente</p>
+<pre><code class="language-vim">[Unit]
+Description=MailHog Service
+After=network.service vagrant.mount
+[Service]
+Type=simple
+ExecStart=/usr/bin/env /usr/local/bin/mailhog &gt; /dev/null 2&gt;&amp;1 &amp;
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+<p>habilitamos nuestro servicio y lo iniciamos</p>
+<pre><code class="language-bash">$ sudo systemctl enable mailhog
+$ sudo systemctl start mailhog
+</code></pre>
+<p>ahora si revisamos los puertos abiertos</p>
+<pre><code class="language-bash">$ netstat -pantl
+</code></pre>
+<p>debemos de ver los puertos 8025 (UI) y 1025 (SMTP)<br>
+Ahora para redirigir los correos al SMTP de Mailhog usamos <code>mhsendmail</code>, es una especie de sendmail pero para MailHog.<br>
+Esta herramienta lo instalamos con GO, si no lo haz instalado teclea</p>
+<pre><code class="language-bash">$ sudo apt install golang-go
+</code></pre>
+<p>Establecemos esta variable de ambiente para indicarle a go donde va a descargar el binario, lo voy a dejar en el directorio temporal</p>
+<pre><code class="language-bash">$ export GOPATH=/tmp
+</code></pre>
+<p>ahora descargamos los archivos del proyecto, incluye el binario</p>
+<pre><code class="language-bash">$ go get github.com/mailhog/mhsendmail
+</code></pre>
+<p>una vez descargado movemos este archivo al directorio bin</p>
+<pre><code class="language-bash">$ sudo mv /tmp/bin/mhsendmail /usr/local/bin/
+</code></pre>
+<p>abre en tu navegador la interfaz de MailHog mi vagrant tiene la ip 192.168.99.69, asi que la url seria <a href="http://192.168.99.69:8025">http://192.168.99.69:8025</a><br>
+<img src="http://localhost:2368/content/images/2017/08/Screen1-1.png" alt="Instala un servidor SMTP para pruebas en entornos de desarrollo con Mailhog"><br>
+y hacemos una prueba de envio</p>
+<pre><code class="language-bash">$ mhsendmail test@mailhog.local &lt;&lt;EOF
+From: App &lt;app@mailhog.local&gt;
+To: Test &lt;test@mailhog.local&gt;
+Subject: Test message
+
+Some content!
+EOF
+</code></pre>
+<p>Si todo salió bien veremos el correo<br>
+<img src="http://localhost:2368/content/images/2017/08/Screen2.png" alt="Instala un servidor SMTP para pruebas en entornos de desarrollo con Mailhog"></p>
+<p>Hasta aqui el tutorial, recuerda que si quieres consultar la documentacion de  <a href="http://https://github.com/mailhog">MailHog</a> la encontrarán en GitHub</p>
+</div>]]></content:encoded></item></channel></rss>

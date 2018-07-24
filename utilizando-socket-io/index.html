@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!--[if lte IE 9]>
+        <script type="text/javascript">
+            window.location = "/browser-compatibility";
+        </script>
+        <![endif]-->
+        <title>Utilizando Socket.IO y Bootstrap progressbar</title>
+        <link rel="shortcut icon" href="../favicon.png" type="image/png" />
+    <link rel="canonical" href="index.html" />
+    <meta name="referrer" content="no-referrer-when-downgrade" />
+    <link rel="amphtml" href="amp/index.html" />
+    
+    <meta property="og:site_name" content="expertTyCE" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Utilizando Socket.IO y Bootstrap progressbar" />
+    <meta property="og:description" content="En este tutorial vamos a crear una sencilla aplicacion que mostrará una barra de progreso cuando una tarea en segundo plano se encuentra ejecutandose. Para comenzar vamos a crear un servidor socket.io con la ayuda NodeJS, NGINX y PM2, el cliente lo desarrollaremos en PHP y Javascript, ademas de" />
+    <meta property="og:url" content="http://localhost:2368/utilizando-socket-io/" />
+    <meta property="og:image" content="http://localhost:2368/content/images/2018/04/socket-logo.png" />
+    <meta property="article:published_time" content="2018-04-28T19:08:04.000Z" />
+    <meta property="article:modified_time" content="2018-05-24T23:29:04.000Z" />
+    <meta property="article:tag" content="socket.io" />
+    <meta property="article:tag" content="PHP" />
+    <meta property="article:tag" content="codeigniter" />
+    <meta property="article:tag" content="javascript" />
+    <meta property="article:tag" content="Jquery" />
+    <meta property="article:tag" content="Ajax" />
+    <meta property="article:tag" content="Linux" />
+    <meta property="article:tag" content="SysAdmin" />
+    
+    <meta property="article:publisher" content="https://www.facebook.com/experttyce" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Utilizando Socket.IO y Bootstrap progressbar" />
+    <meta name="twitter:description" content="En este tutorial vamos a crear una sencilla aplicacion que mostrará una barra de progreso cuando una tarea en segundo plano se encuentra ejecutandose. Para comenzar vamos a crear un servidor socket.io con la ayuda NodeJS, NGINX y PM2, el cliente lo desarrollaremos en PHP y Javascript, ademas de" />
+    <meta name="twitter:url" content="http://localhost:2368/utilizando-socket-io/" />
+    <meta name="twitter:image" content="http://localhost:2368/content/images/2018/04/socket-logo.png" />
+    <meta name="twitter:label1" content="Written by" />
+    <meta name="twitter:data1" content="carlos" />
+    <meta name="twitter:label2" content="Filed under" />
+    <meta name="twitter:data2" content="socket.io, PHP, codeigniter, javascript, Jquery, Ajax, Linux, SysAdmin" />
+    <meta name="twitter:site" content="@experttyce" />
+    <meta property="og:image:width" content="812" />
+    <meta property="og:image:height" content="381" />
+    
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "publisher": {
+        "@type": "Organization",
+        "name": "expertTyCE",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "http://localhost:2368/content/images/2018/01/beaverton--1--2.png",
+            "width": 60,
+            "height": 60
+        }
+    },
+    "author": {
+        "@type": "Person",
+        "name": "carlos",
+        "image": {
+            "@type": "ImageObject",
+            "url": "http://localhost:2368/content/images/2018/07/carlos-b-w.jpg",
+            "width": 640,
+            "height": 480
+        },
+        "url": "http://localhost:2368/author/carlos/",
+        "sameAs": []
+    },
+    "headline": "Utilizando Socket.IO y Bootstrap progressbar",
+    "url": "http://localhost:2368/utilizando-socket-io/",
+    "datePublished": "2018-04-28T19:08:04.000Z",
+    "dateModified": "2018-05-24T23:29:04.000Z",
+    "image": {
+        "@type": "ImageObject",
+        "url": "http://localhost:2368/content/images/2018/04/socket-logo.png",
+        "width": 812,
+        "height": 381
+    },
+    "keywords": "socket.io, PHP, codeigniter, javascript, Jquery, Ajax, Linux, SysAdmin",
+    "description": "En este tutorial vamos a crear una sencilla aplicacion que mostrará una barra de progreso cuando una tarea en segundo plano se encuentra ejecutandose. Para comenzar vamos a crear un servidor socket.io con la ayuda NodeJS, NGINX y PM2, el cliente lo desarrollaremos en PHP y Javascript, ademas de",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "http://localhost:2368/"
+    }
+}
+    </script>
+
+    <script src="../public/ghost-sdk.js?v=19547ebec1"></script>
+<script>
+ghost.init({
+	clientId: "ghost-frontend",
+	clientSecret: "3a40930b942a"
+});
+</script>
+    <meta name="generator" content="Ghost 1.25" />
+    <link rel="alternate" type="application/rss+xml" title="expertTyCE" href="../rss/index.html" />
+    <script src="http://load.sumome.com/" data-sumo-site-id="3b2cf47018676b95f5485952f51cb9fd92dcd2da5f26ee83976ff570cd8362b4" async="async"></script>
+<script>
+var tag_names = ['php', 'codeigniter', 'swagger', 'api rest', 'linux'];
+var ga_id = 'UA-80336852-4';
+var disqus_shortname = 'experttyce'
+var profile_title = 'expertTyCE';
+var profile_resume ='SysAdmin, Developer, DBA';
+</script>
+	<meta name="google-site-verification" content="bkmNPPp4ApqNwhbL5FwLmiwxfvXVYvhN_QdzBSR4z3Y" />
+        <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="apple-touch-icon" sizes="57x57" href="../assets/img/icons/apple/apple-touch-icon-57x57.png?v=gAAmLMYXpw">
+<link rel="apple-touch-icon" sizes="60x60" href="../assets/img/icons/apple/apple-touch-icon-60x60.png?v=gAAmLMYXpw">
+<link rel="apple-touch-icon" sizes="72x72" href="../assets/img/icons/apple/apple-touch-icon-72x72.png?v=gAAmLMYXpw">
+<link rel="apple-touch-icon" sizes="76x76" href="../assets/img/icons/apple/apple-touch-icon-76x76.png?v=gAAmLMYXpw">
+<link rel="apple-touch-icon" sizes="114x114" href="../assets/img/icons/apple/apple-touch-icon-114x114.png?v=gAAmLMYXpw">
+<link rel="apple-touch-icon" sizes="120x120" href="../assets/img/icons/apple/apple-touch-icon-120x120.png?v=gAAmLMYXpw">
+<link rel="apple-touch-icon" sizes="144x144" href="../assets/img/icons/apple/apple-touch-icon-144x144.png?v=gAAmLMYXpw">
+<link rel="apple-touch-icon" sizes="152x152" href="../assets/img/icons/apple/apple-touch-icon-152x152.png?v=gAAmLMYXpw">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/img/icons/apple/apple-touch-icon-180x180.png?v=gAAmLMYXpw">
+<link rel="icon" type="image/png" href="../assets/img/icons/favicon/favicon-32x32.png?v=gAAmLMYXpw" sizes="32x32">
+<link rel="icon" type="image/png" href="../assets/img/icons/favicon/favicon-194x194.png?v=gAAmLMYXpw" sizes="194x194">
+<link rel="icon" type="image/png" href="../assets/img/icons/favicon/favicon-96x96.png?v=gAAmLMYXpw" sizes="96x96">
+<link rel="icon" type="image/png" href="../assets/img/icons/android/android-chrome-192x192.png?v=gAAmLMYXpw" sizes="192x192">
+<link rel="icon" type="image/png" href="../assets/img/icons/favicon/favicon-16x16.png?v=gAAmLMYXpw" sizes="16x16">
+<link rel="manifest" href="../assets/img/icons/android/manifest.json?v=gAAmLMYXpw">
+<link rel="mask-icon" href="../assets/img/icons/safari/safari-pinned-tab.svg?v=gAAmLMYXpw" color="#56817a">
+<link rel="shortcut icon" href="../assets/img/icons/favicon/favicon.ico?v=gAAmLMYXpw">
+<meta name="msapplication-TileColor" content="#56817a">
+<meta name="msapplication-TileImage" content="/assets/img/icons/microsoft/mstile-144x144.png?v=gAAmLMYXpw">
+<meta name="msapplication-config" content="/assets/img/icons/microsoft/browserconfig.xml?v=gAAmLMYXpw">
+<meta name="theme-color" content="#56817a">
+        <link rel="stylesheet" type="text/css" href="../assets/css/caffeine-theme.css?v=19547ebec1" />
+	<link rel="stylesheet" type="text/css" href="../assets/css/prism_.css?v=19547ebec1"/>
+        <style>
+@font-face{font-family:Raleway;font-weight:400;font-style:normal;src:local('Raleway'),local('Raleway-regular'),url(https://fonts.gstatic.com/s/raleway/v10/QAUlVt1jXOgQavlW5wEfxQLUuEpTyoUstqEm5AMlJo4.woff2) format('woff2'),url(https://fonts.gstatic.com/s/raleway/v10/cIFypx4yrWPDz3zOxk7hIQLUuEpTyoUstqEm5AMlJo4.woff) format('woff'),url(https://fonts.gstatic.com/s/raleway/v10/bIcY3_3JNqUVRAQQRNVteQ.ttf) format('truetype'),url(https://fonts.gstatic.com/l/font?kit=IP_NSg73bUZGuyb3zF6qcQ&skey=30a27f2564731c64&v=v10#Raleway) format('svg')}@font-face{font-family:Raleway;font-weight:700;font-style:normal;src:local('Raleway Bold'),local('Raleway-700'),url(https://fonts.gstatic.com/s/raleway/v10/JbtMzqLaYbbbCL9X6EvaIwzyDMXhdD8sAj6OAJTFsBI.woff2) format('woff2'),url(https://fonts.gstatic.com/s/raleway/v10/JbtMzqLaYbbbCL9X6EvaI73hpw3pgy2gAi-Ip7WPMi0.woff) format('woff'),url(https://fonts.gstatic.com/s/raleway/v10/JbtMzqLaYbbbCL9X6EvaIy3USBnSvpkopQaUR-2r7iU.ttf) format('truetype'),url(https://fonts.gstatic.com/l/font?kit=JbtMzqLaYbbbCL9X6EvaI6WUboTb-jS2tyCOQMtm97g&skey=e507c3e2b7915ad1&v=v10#Raleway) format('svg')}@font-face{font-family:'Roboto Slab';font-weight:300;font-style:normal;src:local('Roboto Slab Light'),local('Roboto-Slab-300'),url(https://fonts.gstatic.com/s/robotoslab/v6/dazS1PrQQuCxC3iOAJFEJdTIkQYohD4BpHvJ3NvbHoA.woff2) format('woff2'),url(https://fonts.gstatic.com/s/robotoslab/v6/dazS1PrQQuCxC3iOAJFEJfR_54zmj3SbGZQh3vCOwvY.woff) format('woff'),url(https://fonts.gstatic.com/s/robotoslab/v6/dazS1PrQQuCxC3iOAJFEJbfB31yxOzP-czbf6AAKCVo.ttf) format('truetype'),url(https://fonts.gstatic.com/l/font?kit=dazS1PrQQuCxC3iOAJFEJT4dnM32POWavC8T_whbZeI&skey=5b48fccf0dc70db6&v=v6#RobotoSlab) format('svg')}@font-face{font-family:'Roboto Slab';font-weight:400;font-style:normal;src:local('Roboto Slab Regular'),local('Roboto-Slab-regular'),url(https://fonts.gstatic.com/s/robotoslab/v6/y7lebkjgREBJK96VQi37Zogp9Q8gbYrhqGlRav_IXfk.woff2) format('woff2'),url(https://fonts.gstatic.com/s/robotoslab/v6/y7lebkjgREBJK96VQi37ZrrIa-7acMAeDBVuclsi6Gc.woff) format('woff'),url(https://fonts.gstatic.com/s/robotoslab/v6/y7lebkjgREBJK96VQi37Zp0EAVxt0G0biEntp43Qt6E.ttf) format('truetype'),url(https://fonts.gstatic.com/l/font?kit=y7lebkjgREBJK96VQi37ZnNsigHlcrQGNV8nkUSFQfc&skey=a9ad6a4717e923f0&v=v6#RobotoSlab) format('svg')}
+</style>        <script type="text/javascript">
+try{var storage=window.sessionStorage;storage&&"1"==storage.getItem("fonts-loaded")&&(window.document.documentElement.className+=" fonts-loaded")}catch(e){}
+</script><script async src="http://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script>
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: "ca-pub-8945120579775805",
+    enable_page_level_ads: true
+  });
+</script>
+    </head>
+    <body class="post-template tag-socket-io tag-php tag-codeigniter tag-javascript tag-jquery tag-ajax tag-linux tag-sysadmin">
+        <header id="default-nav-header" class="nav-header nav-header-fixed animated">
+    <a id="home-button" href="../index.html">
+        <img src="../content/images/2018/01/beaverton--1--2.png" alt="expertTyCE avatar" class="avatar rounded hvr-buzz-out" />
+      </a>
+    <a class="tags-button right">
+        <i class="fa fa-search hvr-grow"></i>
+    </a>
+</header>
+        <aside class="cover animated" style="background-image: url(../content/images/2018/01/2012-10-17_15-01-37_318.jpg)">
+    <div class="background-container">
+        <div class="profile">
+            <header id="aside-header" class="nav-header mobile">
+                <a id="aside-close-button" class="open-link right">
+                    <i class="fa fa-close"></i>
+                </a>
+            </header>
+            <div class="profile-logo">
+                <a id="avatar-link" class="open-link" title="Link to homepage for expertTyCE" href="../index.html#open">
+                    <img src="../content/images/2018/01/beaverton--1--2.png" alt="expertTyCE avatar" class="avatar rounded hvr-buzz-out" />
+                </a>
+            </div>
+            <div class="profile-header">
+                <a class="open-link" title="Link to homepage for expertTyCE" href="../index.html#open">
+                    <h1 class="profile-title">expertTyCE</h1>
+                </a>
+            </div>
+            <div class="profile-body">
+                <a class="open-link" title="Link to homepage for expertTyCE" href="../index.html#open">
+                    <h3 id="profile-resume"></h3>
+                </a>
+                <hr class="divider long" />
+                <p>la mayoría de los buenos programadores hacen programación no porque esperan que les paguen o para que el público los adule, sino porque es divertido programar.</p>
+                <hr class="divider short" />
+                    <div class="call-to-action-container">
+                        <nav class="navigation">
+    <ul class="links">
+        <li class="nav-blog ">
+            <a class="home-link" href="../index.html#open" title="expertTyCE blog">Blog</a>
+        </li>
+        <li class="nav-acerca-de ">
+            <a href="../author/carlos/index.html">Acerca de</a>
+        </li>
+        <li class="subscribe-button nav-blog hide ">
+            <a class="subscribe-link" href="../index.html#open" title="subscribe">Subscribe</a>
+        </li>
+    </ul>
+</nav>
+
+                    </div>
+            </div>
+            <ul class="social expanded">
+
+    <!-- Facebook -->
+    <li class="social item hvr-grow-rotate">
+        <a rel="me" target="_blank" href="https://www.facebook.com/experttyce" title="expertTyCE en Facebook">
+            <i class='fa fa-facebook-official'></i>
+            <span class="label">Facebook</span>
+        </a>
+    </li>
+
+    <!-- Twitter -->
+    <li class="social item hvr-grow-rotate">
+        <a rel="me" target="_blank" href="http://twitter.com/experttyce" title="@experttyce en Twitter">
+            <i class='fa fa-twitter'></i>
+            <span class="label">Twitter</span>
+        </a>
+    </li>
+
+    <!-- Linkedin -->
+    <li class="social item hvr-grow-rotate">
+        <a rel="me" target="_blank" href="http://www.linkedin.com/in/orozcopc" title="Carlos en LinkedIn">
+            <i class='fa fa-linkedin-square'></i>
+            <span class="label">Linkedin</span>
+        </a>
+    </li>
+
+    <!-- Github -->
+    <li class="social item hvr-grow-rotate">
+        <a rel="me" target="_blank" href="https://github.com/corozcop" title="Carlos en Github">
+            <i class='fa fa-github'></i>
+            <span class="label">Github</span>
+        </a>
+    </li>
+
+    <!-- RSS -->
+    <li class="social item hvr-grow-rotate">
+        <a href="../rss/index.html" title="Subscribe to RSS">
+            <i class='fa fa-rss'></i>
+            <span class="label">RSS</span>
+        </a>
+    </li>
+</ul>
+        </div>
+    </div>
+</aside>
+
+<div class="blog-header">
+    <a title="Link to homepage for expertTyCE" href="../index.html#open">
+        <h1 class="profile-title hvr-float">expertTyCE</h1>
+    </a>
+    <nav class="navigation">
+    <ul class="links">
+        <li class="nav-blog ">
+            <a class="home-link" href="../index.html#open" title="expertTyCE blog">Blog</a>
+        </li>
+        <li class="nav-acerca-de ">
+            <a href="../author/carlos/index.html">Acerca de</a>
+        </li>
+        <li class="subscribe-button nav-blog hide ">
+            <a class="subscribe-link" href="../index.html#open" title="subscribe">Subscribe</a>
+        </li>
+    </ul>
+</nav>
+
+</div>
+        <main class="animated">
+            <section class="content">
+                
+
+  <article class="post tag-socket-io tag-php tag-codeigniter tag-javascript tag-jquery tag-ajax tag-linux tag-sysadmin featured">
+    <div class="material-cover animated fade-in" style="background-image: url(../content/images/2018/04/socket-logo.png)">
+    <div class="background-container"></div>
+</div>
+    <div class="post-card animated fade-in">
+        <a id="back-button" href="index.html#open" title="Go back" class="hvr-grow">
+            <div class="back-button">
+                <i class="fa fa-arrow-left"></i>
+            </div>
+        </a>
+        <div class="post-container">
+            <div class="post-header">
+                <div class="meta">
+                    <time datetime="April 28, 2018">3 months ago</time>
+                    <span class="tags">in <a href="../tag/socket-io/index.html">socket.io</a> <a href="../tag/php/index.html">PHP</a> <a href="../tag/codeigniter/index.html">codeigniter</a> <a href="../tag/javascript/index.html">javascript</a> <a href="../tag/jquery/index.html">Jquery</a> <a href="../tag/ajax/index.html">Ajax</a> <a href="../tag/linux/index.html">Linux</a> <a href="../tag/sysadmin/index.html">SysAdmin</a></span>
+                    <span class="reading-time"> ~ <span></span> read.</span>
+                </div>
+                <h1 id="post-title">
+                    Utilizando Socket.IO y Bootstrap progressbar
+                </h1>
+<script async src="http://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script>
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: "ca-pub-8945120579775805",
+    enable_page_level_ads: true
+  });
+</script>
+                <div class="share">
+                    <ul class="share-buttons">
+    <li class="hvr-grow-rotate">
+        <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A2368%2Futilizando-socket-io%2F&t=Utilizando%20Socket.IO%20y%20Bootstrap%20progressbar" target="_blank" title="Share on Facebook">
+            <i class="fa fa-facebook-square"></i>
+        </a>
+    </li>
+    <li class="hvr-grow-rotate">
+        <a href="https://twitter.com/intent/tweet?source=http%3A%2F%2Flocalhost%3A2368%2Futilizando-socket-io%2F&text=Utilizando%20Socket.IO%20y%20Bootstrap%20progressbar:http%3A%2F%2Flocalhost%3A2368/utilizando-socket-io/" target="_blank" title="Tweet">
+            <i class="fa fa-twitter-square"></i>
+        </a>
+    </li>
+    <li class="hvr-grow-rotate">
+        <a href="https://plus.google.com/share?url=http%3A%2F%2Flocalhost%3A2368%2Futilizando-socket-io%2F" target="_blank" title="Share on Google+">
+            <i class="fa fa-google-plus-square"></i>
+        </a>
+    </li>
+    <li class="hvr-grow-rotate">
+        <a href="http://www.reddit.com/submit?url=http%3A%2F%2Flocalhost%3A2368%2Futilizando-socket-io%2F&title=Utilizando%20Socket.IO%20y%20Bootstrap%20progressbar" target="_blank" title="Submit to Reddit">
+            <i class="fa fa-reddit-square"></i>
+        </a>
+    </li>
+    <li class="hvr-grow-rotate">
+        <a href="http://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A2368%2Futilizando-socket-io%2F&title=Utilizando%20Socket.IO%20y%20Bootstrap%20progressbar&source=http%3A%2F%2Flocalhost%3A2368%2Futilizando-socket-io%2F" target="_blank" title="Share on LinkedIn">
+            <i class="fa fa-linkedin-square"></i>
+        </a>
+    </li>
+</ul>                </div>
+            </div>
+             <div class="post-content">
+                <div class="kg-card-markdown"><p>En este tutorial vamos a crear una sencilla aplicacion que mostrará una barra de progreso cuando una tarea en segundo plano se encuentra ejecutandose. Para comenzar vamos a crear un servidor socket.io con la ayuda NodeJS, NGINX y PM2, el cliente lo desarrollaremos en PHP y Javascript, ademas de utilizar Python para enviar los estados de la barra de progreso.</p>
+<p>Como es costumbre en mis tutoriales, utilizo un ambiente de desarrollo lo mas parecido a produccion con ayuda de Vagrant y VirtualBox, si deseas saber como crear un ambiente de desarrollo visita este <a href="https://www.experttyce.com/servidor-de-desarrollo-lemp-con-la-ayuda-de-easyengine-vagrant-y-virtualbox/">link</a>. Comenzaremos instalando NodeJS de forma global utilizando el metodo de <a href="http://www.marcominetti.net/personal/blog/2015/09/install-system-wide-node-js-with-nvm-the-painless-way">Marco Minetti</a></p>
+<pre><code class="language-bash">vagrant@vagrant:~$ sudo -i
+root@vagrant:~# apt-get -y install gcc make curl git python python-dev libssl-dev build-essential  
+
+root@vagrant:~# curl https://raw.githubusercontent.com/creationix/nvm/v0.30.1/install.sh | NVM_DIR=/usr/local/nvm PROFILE=/etc/bash.bashrc bash
+
+root@vagrant:~# source ~/.bashrc
+
+root@vagrant:~# nvm install stable
+root@vagrant:~# nvm alias default stable
+
+root@vagrant:~# echo &quot;#\!/bin/bash
+export NVM_DIR=\&quot;/usr/local/nvm\&quot;
+[ -s \&quot;\$NVM_DIR/nvm.sh\&quot; ] &amp;&amp; . \&quot;\$NVM_DIR/nvm.sh\&quot;
+node \$@&quot; &gt; /usr/local/bin/node
+chmod +x /usr/local/bin/node
+
+root@vagrant:~# echo &quot;#\!/bin/bash
+export NVM_DIR=\&quot;/usr/local/nvm\&quot;
+[ -s \&quot;\$NVM_DIR/nvm.sh\&quot; ] &amp;&amp; . \&quot;\$NVM_DIR/nvm.sh\&quot;
+npm \$@&quot; &gt; /usr/local/bin/npm
+chmod +x /usr/local/bin/npm
+
+root@vagrant:~# exit
+
+vagrant@vagrant:~$ node -v
+v10.0.0
+
+vagrant@vagrant:~$ npm -v
+5.6.0
+</code></pre>
+<p>En estas instrucciones estoy incluyendo el prompt bash para distinguir cuando estamos como usuario vagrant y como super usuario.</p>
+<p>Para poder instalar un paquete global, debemos de entrar como super usuario e instalar el paqute con <code>npm install -g</code> o utilizar <code>sudo npm install -g</code> , todos los paquetes globales estarán disponibles para cualquier usuario agregando esta linea al final del archivo <code>/etc/profile</code></p>
+<pre><code class="language-vim">export PATH=$PATH:/usr/local/nvm/versions/node/v10.0.0/bin
+</code></pre>
+<p>La ruta va a depender de la version de NodeJS instalada</p>
+<p>Ahora ya tenemos listo nodejs y npm, vamos comenzar nuestro proyecto nodejs en la carpeta que tu desees con el usuario vagrant, en mi caso la carpeta se llama server en home de vagrant.</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ npm init --yes
+</code></pre>
+<p>El resultado se muestra en pantalla</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;server&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;&quot;,
+  &quot;main&quot;: &quot;index.js&quot;,
+  &quot;scripts&quot;: {
+    &quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 1&quot;
+  },
+  &quot;keywords&quot;: [],
+  &quot;author&quot;: &quot;&quot;,
+  &quot;license&quot;: &quot;ISC&quot;
+}
+</code></pre>
+<p>Ahora instalaremos solo dos paquetes</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ npm install express socketio --save
+</code></pre>
+<p>Con el editor de textos vim voy a crear un archivo llamado index.js y colocar el siguiente codigo</p>
+<pre><code class="language-javascript">var app = require('express')();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+io.on('connection', function (socket){
+  socket.on('bar', function (msg) {
+    socket.broadcast.emit('bar', msg);
+  });
+  socket.on('progress', function (data) {
+    socket.broadcast.emit('progress', data);
+  });
+});
+http.listen(3001, function () {
+  console.log('listening on *:3001');
+});
+</code></pre>
+<p>En este codigo estoy creando dos canales <code>bar</code> y <code>progress</code>, el primero se encargará de mostrar u ocultar la barra de progreso, y la segunda se encargará de enviar el valor actual del progreso.</p>
+<p>Probamos si nuestro codigo esta funcionando</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ node index.js
+</code></pre>
+<p>deben ver el mensaje de log <code>listening on *:3001</code></p>
+<p>Bien, ahora dejaremos este proceso como servicio que se ejecutará siempre que se encuentre encendido nuestro servidor y sirviendo como punto de entrada NGINX.<br>
+Lo primero que haremos será instalar el paquete PM2 global</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ sudo npm install -g pm2
+</code></pre>
+<p>Ahora iniciamos nuestro pequeño programa con PM2</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ pm2 start index.js
+</code></pre>
+<p>Y generamos la instruccion del servicio</p>
+<pre><code class="language-bash">vagrant@vagrant:~/server$ pm2 startup systemd
+</code></pre>
+<p>Nos mostrará en la pantalla la instruccion que debemos ejecutar para crear el servicio en systemd, es algo parecido a esto</p>
+<pre><code class="language-bash">sudo env PATH=$PATH:/usr/local/nvm/versions/node/v10.0.0/bin /usr/local/nvm/versions/node/v10.0.0/lib/node_modules/pm2/bin/pm2 startup systemd -u vagrant --hp /home/vagrant
+</code></pre>
+<p>El resultado despues de ejecutar esta instruccion se vera como la imagen<br>
+<img src="../content/images/2018/04/Screen-Shot-2018-04-28-at-1.44.43-PM.png" alt="Screen-Shot-2018-04-28-at-1.44.43-PM"></p>
+<p>De esta forma ya tenemos instalado nuestro servicio que se ejecutará cada vez que iniciemos nuestro servidor, en este caso estamos en desarrollo, pero tambien sirve para produccion, es lo grandioso de trabajar con vagrant y virtualbox.<br>
+Podemos comprobar si efectivamente está ejecutandose el programa con estas instrucciones</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ pm2 monit
+</code></pre>
+<p>o verificando los puertos abiertos, acuerdense que nuestra aplicacion esta corriendo en el puerto 3001</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ netstat -pantl | grep 3001
+</code></pre>
+<p>Bien, ahora vamos a instalar nginx que nos va a servir como proxy hacia nuestro socket.</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ sudo apt install nginx
+</code></pre>
+<p>Si checamos los puertos abiertos buscando el puerto 80, comprobaremos si el servicio NGINX se levantó correctamente</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ netstat -pantl | grep 80
+</code></pre>
+<p>Ahora agregaremos el virtualhost en NGINX que servirá de entrada a nuestra aplicacion de nodejs, para ello nos dirigimos a la carpeta <code>/etc/nginx/sites-available</code>, aqui solo encontrarás un archivo que contiene la configuracion por defecto de el servidor web.<br>
+Vamos a crear con permisos de superusuario un archivo llamado <code>socketio</code></p>
+<pre><code class="language-bash">vagrant@vagrant:/etc/nginx/sites-available$ sudo vim socketio
+</code></pre>
+<p>y dentro colocaremos la configuracion siguiente</p>
+<pre><code class="language-vim">upstream socket_nodejs_upstream {
+    server 127.0.0.1:3001;
+    keepalive 64;
+}
+
+server {
+        access_log /var/log/nginx/socketio_access.log;
+        error_log  /var/log/nginx/socketio_error.log;
+        server_name socket.localdomain.lan;
+
+  location / {
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-NginX-Proxy true;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection &quot;upgrade&quot;;
+        proxy_max_temp_file_size 0;
+        proxy_pass http://socket_nodejs_upstream/;
+        proxy_redirect off;
+        proxy_read_timeout 240s;
+      }
+}
+</code></pre>
+<p>Ahora habilitamos el virtualhost</p>
+<pre><code class="language-bash">sudo ln -s /etc/nginx/sites-available/socketio /etc/nginx/sites-enabled/socketio
+</code></pre>
+<p>Y comprobamos que no tengamos ningun error de sintaxis</p>
+<pre><code class="language-bash">vagrant@vagrant:/etc/nginx/sites-available$ sudo nginx -t
+</code></pre>
+<p>Si todo va OK, reiniciamos el servicio NGINX</p>
+<pre><code class="language-bash">vagrant@vagrant:/etc/nginx/sites-available$ sudo systemctl restart nginx
+</code></pre>
+<p>Hasta aquí hemos terminado la parte del servidor de socketio, ahora veremos como utilizarlo desde 2 lenguajes distintos, para ello necesitamos registrar nuestro dominio local en el archivo /etc/host (para mac o linux) o C:\Windows\System32\drivers\etc (para Windows), colocamos la ip interna de nuestra maquina virtual y el dominio, que en este caso es <code>socket.localdomain.lan</code>, esto lo habiamos definido en la configuracion del virtualhost de NGINX.</p>
+<p>Voy consumir lo anterior creando una pagina html y con ayuda de jquery, mostrará una barra de progreso, aprovechando que ya tengo instalado NGINX voy a colocar esta pagina en su directorio por default y llamarlo index.html.</p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;utf-8&quot;&gt;
+  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
+  &lt;title&gt;Demo&lt;/title&gt;
+  &lt;link rel=&quot;stylesheet&quot; href=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css&quot;&gt;
+  &lt;!-- Optional Theme --&gt;
+  &lt;link rel=&quot;stylesheet&quot; href=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css&quot;&gt;
+  &lt;!-- Optional IE8 Support --&gt;
+  &lt;!--[if lt IE 9]&gt;
+    &lt;script src=&quot;https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;https://oss.maxcdn.com/respond/1.4.2/respond.min.js&quot;&gt;&lt;/script&gt;
+  &lt;![endif]--&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;container&quot;&gt;
+    &lt;div class=&quot;row&quot; style=&quot;margin-top: 100px&quot;&gt;
+      &lt;div class=&quot;col-md-12&quot;&gt;
+        &lt;div class=&quot;progress&quot; id=&quot;idpgbarmessage&quot;&gt;
+          &lt;div class=&quot;progress-bar progress-bar-success&quot; role=&quot;progressbar&quot; aria-valuenow=&quot;40&quot;
+          aria-valuemin=&quot;0&quot; aria-valuemax=&quot;100&quot; style=&quot;width:40%&quot;&gt;
+          &lt;div id=&quot;idpgmessage&quot;&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+  &lt;!-- jQuery --&gt;
+  &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js&quot;&gt;&lt;/script&gt;
+  &lt;!-- Minified JavaScript --&gt;
+  &lt;script src=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js&quot;&gt;&lt;/script&gt;
+  &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js&quot;&gt;&lt;/script&gt;
+  &lt;script&gt;
+    var appurl = &quot;http://socket.localdomain.lan&quot;
+    var socket = io.connect(appurl, { 'forceNew': true });
+    $('#idpgbarmessage').hide();
+
+    socket.on('progress', function(data) {
+      if (data) {
+        var p = Math.round((parseInt(data.current) / parseInt(data.total))*100);
+        $('.progress-bar').css('width', p + '%').attr('aria-valuenow', p);  
+        $(&quot;#idpgmessage&quot;).html(data.name+&quot; (&quot;+p+&quot;%) &quot;);
+      } 
+    });
+    socket.on('bar', function(data) {
+      if (data == 'show') {
+        $('#idpgbarmessage').show();
+      }
+      if (data == 'hide') {
+        $('#idpgbarmessage').hide();
+      }
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>Ésta es una estructura basica de html5 configurado con bootstrap 3 y jquery, ademas colocamos la barra de progreso y lo identificamos con el ID <code>idpgbarmessage</code>, en la parte de javascript es donde colocamos el codigo que reaccionará al momento que detecte un flujo en los canales, recuerden que habiamos definido 2 canales, en esta variable <code>var appurl</code> estoy colocando la direccion de nuestro servidor local de socket.io. Bien hasta aqui si actualizamos la pagina no mostrará nada aun, nisiquiera la barra de progreso ya que por defecto lo oculto, y solo se mostrará si existe algo que mostrar.</p>
+<p>Ahora vamos a crear un programa en Python que funcionará como cliente y se encargará de enviar los datos que mostrará la barra de progreso.</p>
+<p>Dentro de nuestra maquina virtual vagrant vamos a instalar pip y virtualenv</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ sudo apt-get install python-pip
+vagrant@vagrant:~$ sudo pip install virtualenv
+</code></pre>
+<p>Acostumbro utilizar entornos virtuales cuando uso python, me permite aislar la instalacion de paquetes por programa, por eso creamos un entorno virtual dentro de mi carpeta de trabajo client</p>
+<pre><code class="language-bash">vagrant@vagrant:~$ mkdir ~/client
+vagrant@vagrant:~$ cd ~/client
+vagrant@vagrant:~/client$ virtualenv venv
+vagrant@vagrant:~/client$ source venv/bin/activate
+</code></pre>
+<p>Ahora instalamos un paquete llamado <code>socketIO-client-2</code></p>
+<pre><code class="language-bash">(venv) vagrant@vagrant:~/client$ pip install socketIO-client-2
+</code></pre>
+<p>Noten que el prompt cambio al momento de activar el entorno virtual de python<br>
+Bien ahora el pequeño programa que ejecutará un ciclo para mostrar la barra  y mostrar el progreso, el programa lo llamaré app.py</p>
+<pre><code class="language-python">from socketIO_client import SocketIO
+
+socketIO = SocketIO('http://socket.localdomain.lan')
+socketIO.emit('bar', &quot;show&quot;)
+for i in range(1, 10):
+    socketIO.emit('progress', {&quot;name&quot;: &quot;Carlos&quot;, &quot;total&quot;: 10, &quot;current&quot;: i})
+    socketIO.wait(seconds=1)
+socketIO.emit('bar', &quot;hide&quot;)
+</code></pre>
+<p>Ahora vamos a probar si funciona todo, mantengan abierta la pagina html que creamos en la seccion anterior y vamos a ejecutar el presente programa</p>
+<pre><code class="language-bash">(venv) vagrant@vagrant:~/client$ python app.py
+</code></pre>
+<p>El resultado es como la imagen, donde el programa en python envia la orden de hacer visible la barra, muestra su progreso y cuando termina, se oculta<br>
+<img src="../content/images/2018/04/Screen-Shot-2018-04-30-at-11.57.49-AM.png" alt="Screen-Shot-2018-04-30-at-11.57.49-AM"></p>
+<p>Dejanos tus comentarios y comparte este pequeño ejercicio</p>
+</div>
+            </div>
+                <div class='author-credit'>
+        <figure class="author-image">
+            <a class="img" href="../author/carlos/index.html">
+                    <img src="../content/images/2018/07/carlos-b-w.jpg" alt="carlos's picture" class="avatar rounded" />
+            </a>
+        </figure>
+
+        <div class="author-info">
+            <h4><a href="../author/carlos/index.html" class='author-name'>carlos</a></h4>
+                <p>Read <a href="../author/carlos/index.html">more posts</a> by this author.</p>
+            <div class="author-meta">
+                
+            </div>
+        </div>
+    </div>
+            <footer class="comments">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + window.disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</footer>
+        </div>
+    </div>
+    <div class="post-related pagination">
+        <a rel="prev" id="prev-btn" class="btn hvr-grow" href="../handsontable-edita-rapidamente-tus-registros/index.html">
+            <i class="fa fa-arrow-left"></i>
+            <span>HANDSONTABLE, edita rapidamente tus registros</span>
+        </a>
+
+    <div class="clear"></div>
+</div>  </article>
+
+
+                <footer>
+    <span class="copyright">
+        &copy; 2018 expertTyCE. All Rights Reserved. | Built with <a href="https://ghost.org/" target="_blank">Ghost</a> and <a href="https://github.com/kelyvin/caffeine-theme" target="_blank">Caffeine Theme</a>.
+    </span>
+</footer>
+            </section>
+        </main>
+        <aside class="tags-overlay animated">
+    <div class="tags-overlay container">
+        <section id="search-container" class="search-container">
+    <form id="search-form" class="search-form">
+        <input id="search-field" class="search-field" type="text", name="search", placeholder="git, code, javascript,..." />
+    </form>
+    <hr class="divider short" />
+</section>
+<section id="search-results" class="search-results"></section>        
+<div id="popular-tags" class="tags-container">
+    <h2>Popular Tags</h2>
+    <div class="tags">
+    </div>
+</div>    </div>
+</aside>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script type="text/javascript" src="https://unpkg.com/imagesloaded@4.1/imagesloaded.pkgd.min.js"></script>
+<script type="text/javascript" src="https://unpkg.com/masonry-layout@4.0/dist/masonry.pkgd.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/scrollreveal.js/3.0.9/scrollreveal.min.js"></script>
+        <script src="../assets/js/caffeine-theme.js?v=19547ebec1" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript" src="../assets/js/prism_.js?v=19547ebec1"></script>
+        <script>
+    if (window.ga_id) {
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', window.ga_id, 'auto');
+        ga('require', 'linkid', 'linkid.js');
+        ga('send', 'pageview');
+    }
+</script>
+        <script type="text/javascript">
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = '//' + window.disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>    </body>
+</html>
